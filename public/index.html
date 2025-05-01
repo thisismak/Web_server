@@ -1,86 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home Page</title>
-    <style>
-      .post-item {
-        width: 12rem;
-        border: 1px solid black;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Server - Home</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for frame */
+    .frame-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #ffffff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      min-height: calc(100vh - 12rem);
+    }
+    @media (max-width: 640px) {
+      .frame-container {
+        padding: 1rem;
       }
-      .post-item .post-avatar {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Home Page</h1>
-    <nav hidden id="topMenu">
-      <a id="loginLink" href="/login.html">登入</a>
-      <a id="registerLink" href="/register.html">註冊</a>
-      <a id="logoutLink" href="#" onclick="logout()">登出</a>
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white sticky top-0 shadow-md">
+    <nav class="max-w-1200 mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Smart大檔</h1>
+      <ul class="flex space-x-6">
+        <li><a href="/index.html" class="hover:underline">Home</a></li>
+        <li><a href="/posts.html" class="hover:underline">Posts</a></li>
+        <li><a href="/upload.html" class="hover:underline" id="uploadLink">Upload</a></li>
+        <li><a href="/login.html" class="hover:underline" id="authLink">Login</a></li>
+      </ul>
     </nav>
-    <p id="statusMessage"></p>
-    <h2>Posts</h2>
-    <div id="postList"></div>
-    <div class="post-item">
-      <div class="post-title"></div>
-      <div class="post-content"></div>
-      <div class="post-username"></div>
-      <img class="post-avatar" />
+  </header>
+
+  <!-- Main Content -->
+  <main class="frame-container my-8">
+    <section class="text-center">
+      <h2 class="text-4xl font-bold text-gray-800 mb-4">Welcome to Cloud Share</h2>
+      <p class="text-lg text-gray-600 mb-6">Share and explore resources with our community. Upload your files, view posts, and connect with others.</p>
+      <div class="flex justify-center space-x-4">
+        <a href="/posts.html" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">View Posts</a>
+        <a href="/login.html" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition" id="loginCta">Login to Upload</a>
+      </div>
+    </section>
+
+    <!-- Optional: Recent Posts Preview -->
+    <section class="mt-12">
+      <h3 class="text-2xl font-semibold text-gray-800 mb-6">Recent Posts</h3>
+      <div id="postsPreview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Posts will be populated by JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-4">
+    <div class="max-w-1200 mx-auto px-4 text-center">
+      <p>&copy; 2025 Web Server. All rights reserved.</p>
     </div>
-    <script>
-      let postTemplate = document.querySelector('.post-item')
-      postTemplate.remove()
+  </footer>
 
-      function logout() {
-        localStorage.removeItem('token')
-        window.location.href = '/'
-      }
+  <script>
+    // Handle authentication state
+    const token = localStorage.getItem('token');
+    const authLink = document.getElementById('authLink');
+    const loginCta = document.getElementById('loginCta');
+    const uploadLink = document.getElementById('uploadLink');
 
-      // ajax, call API to load data, without whole page reload
-      async function getRole() {
-        let res = await fetch(
-          '/role?' +
-            new URLSearchParams({ token: localStorage.getItem('token') }),
-        )
-        let json = await res.json()
-        return json.role
-      }
+    if (token) {
+      authLink.textContent = 'Logout';
+      authLink.href = `/logout?token=${encodeURIComponent(token)}`;
+      loginCta.textContent = 'Upload Now';
+      loginCta.href = '/upload.html';
+    } else {
+      authLink.textContent = 'Login';
+      authLink.href = '/login.html';
+      loginCta.textContent = 'Login to Upload';
+      loginCta.href = '/login.html';
+    }
 
-      async function init() {
-        statusMessage.textContent = 'Loading role...'
-        let role = await getRole()
-        statusMessage.textContent = `Role: ${role}`
-
-        if (role == 'guest') {
-          logoutLink.hidden = true
-        } else {
-          loginLink.hidden = true
-          registerLink.hidden = true
+    // Fetch recent posts (optional)
+    async function loadRecentPosts() {
+      try {
+        const response = await fetch('/posts', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to load posts');
         }
 
-        topMenu.hidden = false
-      }
-      init()
-
-      async function loadPosts() {
-        let res = await fetch('/posts')
-        let json = await res.json()
-        postList.innerHTML = ''
-        for (let post of json.posts) {
-          let postNode = postTemplate.cloneNode(true)
-          postNode.querySelector('.post-title').textContent = post.title
-          postNode.querySelector('.post-content').textContent = post.content
-          postNode.querySelector('.post-username').textContent = post.username
-          postNode.querySelector('.post-avatar').src = post.avatar
-          postList.appendChild(postNode)
+        const postsContainer = document.getElementById('postsPreview');
+        const recentPosts = data.posts.slice(0, 3); // Show up to 3 posts
+        if (recentPosts.length === 0) {
+          postsContainer.innerHTML = '<p class="text-gray-600">No posts yet.</p>';
+          return;
         }
+
+        recentPosts.forEach(post => {
+          const postDiv = document.createElement('div');
+          postDiv.className = 'bg-gray-50 p-4 rounded-lg shadow hover:shadow-lg transition';
+          postDiv.innerHTML = `
+            <h4 class="text-xl font-semibold text-gray-800">${post.name}</h4>
+            <p class="text-gray-600 mt-2">By ${post.username}</p>
+            ${post.image ? `<img src="/${post.image}" alt="${post.name}" class="mt-2 w-full h-32 object-cover rounded">` : ''}
+            <p class="text-gray-600 mt-2">${post.features.substring(0, 100)}${post.features.length > 100 ? '...' : ''}</p>
+            <a href="/posts.html" class="text-blue-600 mt-2 inline-block hover:underline">View Details</a>
+          `;
+          postsContainer.appendChild(postDiv);
+        });
+      } catch (error) {
+        console.error('Error loading posts:', error);
+        document.getElementById('postsPreview').innerHTML = '<p class="text-gray-600">Error loading posts.</p>';
       }
-      loadPosts()
-    </script>
-  </body>
+    }
+
+    loadRecentPosts();
+  </script>
+</body>
 </html>

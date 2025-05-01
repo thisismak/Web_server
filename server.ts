@@ -2,6 +2,15 @@ import express, { Request, Response, Application, RequestHandler } from 'express
 import { print } from 'listening-on';
 import { randomUUID } from 'node:crypto';
 import sqlite3 from 'sqlite3';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 // Define interfaces for SQLite query results
 interface User {
@@ -35,6 +44,18 @@ interface Post {
   username?: string;
 }
 
+// Define interface for Multer file
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  destination: string;
+  filename: string;
+  path: string;
+  size: number;
+}
+
 // Initialize SQLite database
 const db = new sqlite3.Database('db.sqlite3', (err) => {
   if (err) {
@@ -47,7 +68,21 @@ const db = new sqlite3.Database('db.sqlite3', (err) => {
 // Initialize Express app
 const server: Application = express();
 
+// Configure multer for file uploads to disk
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${randomUUID()}`;
+    const ext = path.extname(file.originalname);
+    cb(null, `${uniqueSuffix}${ext}`);
+  },
+});
+const upload = multer({ storage });
+
 server.use(express.static('public'));
+server.use('/Uploads', express.static(uploadDir)); // Serve uploads for images
 server.use(express.urlencoded({ extended: true }));
 server.use(express.json({ limit: '10mb' }));
 
@@ -182,20 +217,17 @@ const postsHandler: RequestHandler = (req: Request, res: Response): void => {
 server.get('/posts', postsHandler);
 
 const uploadHandler: RequestHandler = (req: Request, res: Response): void => {
-  const { name, type, function: func, features, category, tags, image, file, file_name, file_type, impact, token } = req.body;
-
-  if (!token) {
-    res.status(401).json({ error: 'Missing token' });
-    return;
-  }
-  db.get('SELECT user_id FROM session WHERE token = ?', [token], (err, session: Session | undefined) => {
+  upload.fields([{ name: 'image', maxCount: 1 }, { name: 'file', maxCount: 1 }])(req, res, (err) => {
     if (err) {
-      console.error('Database error:', err.message);
+      console.error('Multer error:', err.message);
       res.status(500).json({ error: 'Internal server error' });
       return;
     }
-    if (!session) {
-      res.status(401).json({ error: 'Invalid token' });
+
+    const { name, type, function: func, features, category, tags, token, impact, file_name, file_type } = req.body;
+
+    if (!token) {
+      res.status(401).json({ error: 'Missing token' });
       return;
     }
     if (!name || !type || !func || !features || !category || !tags) {
@@ -203,18 +235,49 @@ const uploadHandler: RequestHandler = (req: Request, res: Response): void => {
       return;
     }
 
-    db.run(
-      'INSERT INTO post (user_id, name, type, function, features, category, tags, image, file, file_name, file_type, impact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [session.user_id, name, type, func, features, category, tags, image || null, file || null, file_name || null, file_type || null, impact || null],
-      (err) => {
-        if (err) {
-          console.error('Insert post error:', err.message);
-          res.status(500).json({ error: 'Internal server error' });
-          return;
-        }
-        res.status(200).json({ message: 'Resource uploaded successfully' });
+    db.get('SELECT user_id FROM session WHERE token = ?', [token], (err, session: Session | undefined) => {
+      if (err) {
+        console.error('Database error:', err.message);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
       }
-    );
+      if (!session) {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
+      }
+
+      // Explicitly type req.files as an object with field names
+      const files = req.files as { [fieldname: string]: MulterFile[] } | undefined;
+
+      const imagePath = files?.['image']?.[0] ? path.join('uploads', files['image'][0].filename) : null;
+      const filePath = files?.['file']?.[0] ? path.join('uploads', files['file'][0].filename) : null;
+
+      db.run(
+        'INSERT INTO post (user_id, name, type, function, features, category, tags, image, file, file_name, file_type, impact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          session.user_id,
+          name,
+          type,
+          func,
+          features,
+          category,
+          tags,
+          imagePath,
+          filePath,
+          file_name || (files?.['file']?.[0]?.originalname) || null,
+          file_type || (files?.['file']?.[0]?.mimetype) || null,
+          impact || null,
+        ],
+        (err) => {
+          if (err) {
+            console.error('Insert post error:', err.message);
+            res.status(500).json({ error: 'Internal server error' });
+            return;
+          }
+          res.status(200).json({ message: 'Resource uploaded successfully' });
+        }
+      );
+    });
   });
 };
 
@@ -233,14 +296,17 @@ const downloadHandler: RequestHandler<{ postId: string }> = (req: Request<{ post
       return;
     }
 
-    const data = post.file.split(',')[1];
-    const buffer = Buffer.from(data, 'base64');
+    const filePath = path.join(__dirname, post.file);
+    if (!fs.existsSync(filePath)) {
+      res.status(404).send('File not found on server');
+      return;
+    }
 
     res.set({
       'Content-Type': post.file_type,
       'Content-Disposition': `attachment; filename="${post.file_name}"`,
     });
-    res.send(buffer);
+    res.sendFile(filePath);
   });
 };
 

@@ -1,134 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>View Resources</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      .post-item {
-        border: 1px solid #ccc;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 5px;
-      }
-      .post-item img {
-        max-width: 200px;
-        height: auto;
-        border-radius: 5px;
-      }
-      .post-item iframe {
-        width: 100%;
-        max-width: 560px;
-        height: 315px;
-      }
-      .post-item a {
-        color: #007bff;
-        text-decoration: none;
-      }
-      .post-item a:hover {
-        text-decoration: underline;
-      }
-      .post-item p {
-        margin: 5px 0;
-      }
-      .tags {
-        color: #555;
-        font-style: italic;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>All Resources</h1>
-    <nav>
-      <a href="/">Home</a> |
-      <a href="/upload.html">Upload Resource</a> |
-      <a href="/login.html">Login</a> |
-      <a href="#" onclick="logout()">Logout</a>
-    </nav>
-    <p id="statusMessage"></p>
-    <div id="postList"></div>
-    <div class="post-item" style="display: none;">
-      <p class="post-name"></p>
-      <p class="post-type"></p>
-      <p class="post-function"></p>
-      <p class="post-features"></p>
-      <p class="post-category"></p>
-      <p class="post-tags"></p>
-      <img class="post-image" />
-      <p class="post-file"></p>
-      <p class="post-impact"></p>
-      <p class="post-username"></p>
-    </div>
-    <script>
-      let postTemplate = document.querySelector('.post-item')
-      postTemplate.remove()
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Posts</title>
+  <style>
+    .post {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .post img {
+      max-width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Posts</h1>
+  <p><a href="/upload.html">Upload New Resource</a> | <a href="/logout?token=" id="logoutLink">Logout</a></p>
+  <div id="postsContainer"></div>
 
-      function logout() {
-        localStorage.removeItem('token')
-        window.location.href = '/'
-      }
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to view posts');
+      window.location.href = '/login.html';
+    }
 
-      function getYouTubeEmbedUrl(url) {
-        if (!url) return null
-        let videoId = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]+)/)?.[1]
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : null
-      }
+    document.getElementById('logoutLink').href = `/logout?token=${encodeURIComponent(token)}`;
 
-      async function loadPosts() {
-        let res = await fetch('/posts')
-        let json = await res.json()
-        postList.innerHTML = ''
-        for (let post of json.posts) {
-          let postNode = postTemplate.cloneNode(true)
-          postNode.querySelector('.post-name').textContent = `Name: ${post.name}`
-          postNode.querySelector('.post-type').textContent = `Type: ${post.type}`
-          postNode.querySelector('.post-function').textContent = `Function: ${post.function}`
-          postNode.querySelector('.post-features').textContent = `Features: ${post.features}`
-          postNode.querySelector('.post-category').textContent = `Category: ${post.category}`
-          postNode.querySelector('.post-tags').textContent = `Tags: ${post.tags}`
-          postNode.querySelector('.post-username').textContent = `Uploaded by: ${post.username || 'Unknown'}`
+    async function loadPosts() {
+      try {
+        const response = await fetch('/posts', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-          if (post.image) {
-            postNode.querySelector('.post-image').src = post.image
-          } else {
-            postNode.querySelector('.post-image').style.display = 'none'
-          }
+        const data = await response.json();
 
-          if (post.file && post.file_name) {
-            let link = document.createElement('a')
-            link.href = `/download/${post.id}`
-            link.textContent = `Download ${post.file_name}`
-            postNode.querySelector('.post-file').appendChild(link)
-          } else {
-            postNode.querySelector('.post-file').style.display = 'none'
-          }
-
-          if (post.impact) {
-            let embedUrl = getYouTubeEmbedUrl(post.impact)
-            if (embedUrl) {
-              let iframe = document.createElement('iframe')
-              iframe.src = embedUrl
-              iframe.frameBorder = '0'
-              iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-              iframe.allowFullscreen = true
-              postNode.querySelector('.post-impact').appendChild(iframe)
-            } else {
-              postNode.querySelector('.post-impact').textContent = 'Invalid YouTube link'
-            }
-          } else {
-            postNode.querySelector('.post-impact').style.display = 'none'
-          }
-
-          postList.appendChild(postNode)
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to load posts');
         }
+
+        const postsContainer = document.getElementById('postsContainer');
+        postsContainer.innerHTML = '';
+
+        data.posts.forEach(post => {
+          const postDiv = document.createElement('div');
+          postDiv.className = 'post';
+          postDiv.innerHTML = `
+            <h3>${post.name}</h3>
+            <p><strong>Posted by:</strong> ${post.username}</p>
+            <p><strong>Type:</strong> ${post.type}</p>
+            <p><strong>Function:</strong> ${post.function}</p>
+            <p><strong>Features:</strong> ${post.features}</p>
+            <p><strong>Category:</strong> ${post.category}</p>
+            <p><strong>Tags:</strong> ${post.tags}</p>
+            ${post.image ? `<p><strong>Image:</strong><br><img src="/${post.image}" alt="Post Image"></p>` : ''}
+            ${post.file_name ? `<p><strong>File:</strong> <a href="/download/${post.id}" download="${post.file_name}">${post.file_name}</a></p>` : ''}
+            ${post.impact ? `<p><strong>Impact:</strong> ${post.impact}</p>` : ''}
+          `;
+          postsContainer.appendChild(postDiv);
+        });
+      } catch (error) {
+        alert(error.message);
       }
-      loadPosts()
-    </script>
-  </body>
+    }
+
+    loadPosts();
+  </script>
+</body>
 </html>

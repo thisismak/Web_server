@@ -4,10 +4,83 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home Page</title>
+    <style>
+      .post-item {
+        width: 12rem;
+        border: 1px solid black;
+      }
+      .post-item .post-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+      }
+    </style>
   </head>
   <body>
     <h1>Home Page</h1>
-    <a href="/login.html">登入</a>
-    <a href="/logout">登出</a>
+    <nav hidden id="topMenu">
+      <a id="loginLink" href="/login.html">登入</a>
+      <a id="registerLink" href="/register.html">註冊</a>
+      <a id="logoutLink" href="#" onclick="logout()">登出</a>
+    </nav>
+    <p id="statusMessage"></p>
+    <h2>Posts</h2>
+    <div id="postList"></div>
+    <div class="post-item">
+      <div class="post-title"></div>
+      <div class="post-content"></div>
+      <div class="post-username"></div>
+      <img class="post-avatar" />
+    </div>
+    <script>
+      let postTemplate = document.querySelector('.post-item')
+      postTemplate.remove()
+
+      function logout() {
+        localStorage.removeItem('token')
+        window.location.href = '/'
+      }
+
+      // ajax, call API to load data, without whole page reload
+      async function getRole() {
+        let res = await fetch(
+          '/role?' +
+            new URLSearchParams({ token: localStorage.getItem('token') }),
+        )
+        let json = await res.json()
+        return json.role
+      }
+
+      async function init() {
+        statusMessage.textContent = 'Loading role...'
+        let role = await getRole()
+        statusMessage.textContent = `Role: ${role}`
+
+        if (role == 'guest') {
+          logoutLink.hidden = true
+        } else {
+          loginLink.hidden = true
+          registerLink.hidden = true
+        }
+
+        topMenu.hidden = false
+      }
+      init()
+
+      async function loadPosts() {
+        let res = await fetch('/posts')
+        let json = await res.json()
+        postList.innerHTML = ''
+        for (let post of json.posts) {
+          let postNode = postTemplate.cloneNode(true)
+          postNode.querySelector('.post-title').textContent = post.title
+          postNode.querySelector('.post-content').textContent = post.content
+          postNode.querySelector('.post-username').textContent = post.username
+          postNode.querySelector('.post-avatar').src = post.avatar
+          postList.appendChild(postNode)
+        }
+      }
+      loadPosts()
+    </script>
   </body>
 </html>

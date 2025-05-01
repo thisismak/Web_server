@@ -1,0 +1,261 @@
+import express, { Request, Response, Application, RequestHandler } from 'express';
+import { print } from 'listening-on';
+import { randomUUID } from 'node:crypto';
+import sqlite3 from 'sqlite3';
+
+// Define interfaces for SQLite query results
+interface User {
+  id: number;
+  username: string;
+  password: string;
+  avatar: string | null;
+  email: string | null;
+}
+
+interface Session {
+  id: number;
+  token: string;
+  user_id: number;
+}
+
+interface Post {
+  id: number;
+  user_id: number;
+  name: string;
+  type: string;
+  function: string;
+  features: string;
+  category: string;
+  tags: string;
+  image: string | null;
+  file: string | null;
+  file_name: string | null;
+  file_type: string | null;
+  impact: string | null;
+  username?: string;
+}
+
+// Initialize SQLite database
+const db = new sqlite3.Database('db.sqlite3', (err) => {
+  if (err) {
+    console.error('Database connection error:', err.message);
+  } else {
+    console.log('Connected to SQLite database');
+  }
+});
+
+// Initialize Express app
+const server: Application = express();
+
+server.use(express.static('public'));
+server.use(express.urlencoded({ extended: true }));
+server.use(express.json({ limit: '10mb' }));
+
+const registerHandler: RequestHandler = (req: Request, res: Response): void => {
+  const { username, password } = req.body;
+  console.log('Register attempt:', { username, password });
+
+  if (!username) {
+    res.status(400).json({ error: 'missing username' });
+    return;
+  }
+  if (!password) {
+    res.status(400).json({ error: 'missing password' });
+    return;
+  }
+
+  db.get('SELECT id FROM user WHERE username = ?', [username], (err, row: User | undefined) => {
+    if (err) {
+      console.error('Database error:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    if (row) {
+      res.status(409).json({ error: 'username already exists' });
+      return;
+    }
+
+    db.run(
+      'INSERT INTO user (username, password, avatar, email) VALUES (?, ?, NULL, NULL)',
+      [username, password],
+      function (err) {
+        if (err) {
+          console.error('Insert user error:', err.message);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+        }
+        console.log('Registered user:', { id: this.lastID, username });
+        res.status(200).json({ message: 'Register Success' });
+      }
+    );
+  });
+};
+
+server.post('/register', registerHandler);
+
+const loginHandler: RequestHandler = (req: Request, res: Response): void => {
+  const { username, password } = req.body;
+  console.log('Login attempt:', { username, password });
+
+  if (!username) {
+    res.status(400).json({ error: 'missing username' });
+    return;
+  }
+  if (!password) {
+    res.status(400).json({ error: 'missing password' });
+    return;
+  }
+
+  db.get('SELECT id, username, password FROM user WHERE username = ?', [username], (err, user: User | undefined) => {
+    if (err) {
+      console.error('Database error:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    if (!user) {
+      res.status(401).json({ error: 'wrong username' });
+      return;
+    }
+    if (user.password !== password) {
+      res.status(401).json({ error: 'wrong password' });
+      return;
+    }
+
+    const token = randomUUID();
+    db.run('INSERT INTO session (token, user_id) VALUES (?, ?)', [token, user.id], (err) => {
+      if (err) {
+        console.error('Insert session error:', err.message);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.status(200).json({ token });
+    });
+  });
+};
+
+server.post('/login', loginHandler);
+
+const logoutHandler: RequestHandler = (req: Request, res: Response): void => {
+  const token = req.query.token as string;
+  db.run('DELETE FROM session WHERE token = ?', [token], (err) => {
+    if (err) {
+      console.error('Delete session error:', err.message);
+    }
+    res.redirect('/');
+  });
+};
+
+server.get('/logout', logoutHandler);
+
+const roleHandler: RequestHandler = (req: Request, res: Response): void => {
+  const token = req.query.token as string || '';
+  db.get('SELECT user_id FROM session WHERE token = ?', [token], (err, session: Session | undefined) => {
+    if (err) {
+      console.error('Database error:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    res.status(200).json({
+      role: session?.user_id ? 'user' : 'guest',
+      user_id: session?.user_id,
+    });
+  });
+};
+
+server.get('/role', roleHandler);
+
+const postsHandler: RequestHandler = (req: Request, res: Response): void => {
+  db.all(
+    'SELECT post.*, user.username FROM post LEFT JOIN user ON post.user_id = user.id',
+    [],
+    (err, rows: Post[]) => {
+      if (err) {
+        console.error('Database error:', err.message);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.status(200).json({ posts: rows });
+    }
+  );
+};
+
+server.get('/posts', postsHandler);
+
+const uploadHandler: RequestHandler = (req: Request, res: Response): void => {
+  const { name, type, function: func, features, category, tags, image, file, file_name, file_type, impact, token } = req.body;
+
+  if (!token) {
+    res.status(401).json({ error: 'Missing token' });
+    return;
+  }
+  db.get('SELECT user_id FROM session WHERE token = ?', [token], (err, session: Session | undefined) => {
+    if (err) {
+      console.error('Database error:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    if (!session) {
+      res.status(401).json({ error: 'Invalid token' });
+      return;
+    }
+    if (!name || !type || !func || !features || !category || !tags) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+
+    db.run(
+      'INSERT INTO post (user_id, name, type, function, features, category, tags, image, file, file_name, file_type, impact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [session.user_id, name, type, func, features, category, tags, image || null, file || null, file_name || null, file_type || null, impact || null],
+      (err) => {
+        if (err) {
+          console.error('Insert post error:', err.message);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+        }
+        res.status(200).json({ message: 'Resource uploaded successfully' });
+      }
+    );
+  });
+};
+
+server.post('/upload', uploadHandler);
+
+const downloadHandler: RequestHandler<{ postId: string }> = (req: Request<{ postId: string }>, res: Response): void => {
+  const postId = parseInt(req.params.postId);
+  db.get('SELECT file, file_name, file_type FROM post WHERE id = ?', [postId], (err, post: Post | undefined) => {
+    if (err) {
+      console.error('Database error:', err.message);
+      res.status(500).send('Internal server error');
+      return;
+    }
+    if (!post || !post.file || !post.file_name || !post.file_type) {
+      res.status(404).send('File not found');
+      return;
+    }
+
+    const data = post.file.split(',')[1];
+    const buffer = Buffer.from(data, 'base64');
+
+    res.set({
+      'Content-Type': post.file_type,
+      'Content-Disposition': `attachment; filename="${post.file_name}"`,
+    });
+    res.send(buffer);
+  });
+};
+
+server.get('/download/:postId', downloadHandler);
+
+server.listen(3000, () => {
+  print(3000);
+});
+
+process.on('SIGINT', () => {
+  db.close((err) => {
+    if (err) {
+      console.error('Error closing database:', err.message);
+    }
+    console.log('Database connection closed');
+    process.exit(0);
+  });
+});

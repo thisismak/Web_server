@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Register</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -30,19 +30,19 @@
       button:hover {
         background-color: #0056b3;
       }
-      #errorMessage {
+      #statusMessage {
         color: red;
       }
     </style>
   </head>
   <body>
-    <h1>Login Blog System</h1>
+    <h1>Register Blog System</h1>
     <form onsubmit="submitForm(event)">
       <input type="text" name="username" placeholder="Username" required />
       <input type="password" name="password" placeholder="Password" required />
-      <button type="submit">Login</button>
+      <button type="submit">Register</button>
     </form>
-    <p id="errorMessage"></p>
+    <p id="statusMessage"></p>
     <script>
       async function submitForm(event) {
         event.preventDefault();
@@ -51,22 +51,25 @@
         const username = formData.get('username').trim();
         const password = formData.get('password');
 
-        const errorMessage = document.getElementById('errorMessage');
-        errorMessage.textContent = '';
+        const statusMessage = document.getElementById('statusMessage');
+        statusMessage.textContent = '';
 
-        const res = await fetch('/login', {
+        const res = await fetch('/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ username, password }),
         });
-        const json = await res.json();
-        if (json.error) {
-          errorMessage.textContent = json.error;
+
+        if (res.ok) {
+          statusMessage.textContent = 'Registration successful! Redirecting to login...';
+          setTimeout(() => {
+            window.location.href = '/login.html';
+          }, 1000);
         } else {
-          localStorage.setItem('token', json.token);
-          window.location.href = '/';
+          const json = await res.json();
+          statusMessage.textContent = `Error: ${json.error || 'Registration failed'}`;
         }
       }
     </script>

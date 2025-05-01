@@ -1,0 +1,64 @@
+# Visualize on https://erd.surge.sh
+# or https://quick-erd.surge.sh
+#
+# Relationship Types
+#  -    - one to one
+#  -<   - one to many
+#  >-   - many to one
+#  >-<  - many to many
+#  -0   - one to zero or one
+#  0-   - zero or one to one
+#  0-0  - zero or one to zero or one
+#  -0<  - one to zero or many
+#  >0-  - zero or many to one
+#
+////////////////////////////////////
+
+user
+----
+id integer PK
+username varchar(32)
+password varchar(64)
+avatar varchar(50) NULL
+email varchar(255) NULL
+
+session
+-------
+id integer PK
+token text
+user_id integer FK >0- user.id
+
+post
+----
+id integer PK
+user_id integer FK >0- user.id
+name varchar(100)
+type varchar(50)
+function text
+features text
+category varchar(50)
+tags text
+image text NULL
+file text NULL
+file_name varchar(255) NULL
+file_type varchar(100) NULL
+impact text NULL
+
+like
+----
+id integer PK
+user_id integer FK >0- user.id
+post_id integer FK >0- post.id
+
+# zoom: 1.000
+# view: (20, -15)
+# text-bg: #6495ed
+# text-color: #000000
+# diagram-bg: #f5f5f5
+# diagram-text: #000000
+# table-bg: #ffffff
+# table-text: #000000
+# user (797, 293)
+# session (475, 443)
+# post (40, 258)
+# like (444, 86)

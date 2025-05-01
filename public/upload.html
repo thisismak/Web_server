@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Resource</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      input,
+      textarea {
+        padding: 8px;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #statusMessage {
+        color: red;
+      }
+      label {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Upload a Resource</h1>
+    <nav>
+      <a href="/">Home</a> |
+      <a href="/posts.html">View Resources</a> |
+      <a href="/login.html">Login</a> |
+      <a href="#" onclick="logout()">Logout</a>
+    </nav>
+    <p id="statusMessage"></p>
+    <form onsubmit="submitForm(event)">
+      <label for="name">Name *</label>
+      <input type="text" name="name" placeholder="Resource Name" required />
+      
+      <label for="type">Type *</label>
+      <input type="text" name="type" placeholder="e.g., Document, Software" required />
+      
+      <label for="function">Function *</label>
+      <textarea name="function" placeholder="Describe the function" rows="3" required></textarea>
+      
+      <label for="features">Features *</label>
+      <textarea name="features" placeholder="List key features" rows="3" required></textarea>
+      
+      <label for="category">Category *</label>
+      <input type="text" name="category" placeholder="e.g., Education, Technology" required />
+      
+      <label for="tags">Tags *</label>
+      <input type="text" name="tags" placeholder="Comma-separated tags, e.g., learning, tech" required />
+      
+      <label for="image">Image</label>
+      <input type="file" name="image" accept="image/*" />
+      
+      <label for="file">File</label>
+      <input type="file" name="file" />
+      
+      <label for="impact">Impact (YouTube Link)</label>
+      <input type="url" name="impact" placeholder="https://www.youtube.com/watch?v=..." />
+      
+      <button type="submit">Submit Resource</button>
+    </form>
+    <script>
+      function logout() {
+        localStorage.removeItem('token')
+        window.location.href = '/'
+      }
+
+      async function getRole() {
+        let res = await fetch(
+          '/role?' +
+            new URLSearchParams({ token: localStorage.getItem('token') }),
+        )
+        let json = await res.json()
+        return json
+      }
+
+      async function init() {
+        statusMessage.textContent = 'Checking login status...'
+        let { role, user_id } = await getRole()
+        if (role === 'guest') {
+          statusMessage.textContent = 'Please log in to upload a resource.'
+          document.querySelector('form').style.display = 'none'
+        } else {
+          statusMessage.textContent = `Logged in as user ID: ${user_id}`
+        }
+      }
+      init()
+
+      async function submitForm(event) {
+        event.preventDefault()
+        let form = event.target
+        let formData = new FormData(form)
+        let name = formData.get('name')
+        let type = formData.get('type')
+        let func = formData.get('function')
+        let features = formData.get('features')
+        let category = formData.get('category')
+        let tags = formData.get('tags')
+        let imageFile = formData.get('image')
+        let file = formData.get('file')
+        let impact = formData.get('impact')
+
+        let image = null
+        if (imageFile && imageFile.size > 0) {
+          image = await new Promise((resolve) => {
+            let reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.readAsDataURL(imageFile)
+          })
+        }
+
+        let fileData = null
+        let file_name = null
+        let file_type = null
+        if (file && file.size > 0) {
+          fileData = await new Promise((resolve) => {
+            let reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.readAsDataURL(file)
+          })
+          file_name = file.name
+          file_type = file.type
+        }
+
+        let token = localStorage.getItem('token')
+        let res = await fetch('/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name,
+            type,
+            function: func,
+            features,
+            category,
+            tags,
+            image,
+            file: fileData,
+            file_name,
+            file_type,
+            impact,
+            token,
+          }),
+        })
+        let json = await res.json()
+        if (json.error) {
+          statusMessage.textContent = json.error
+        } else {
+          statusMessage.textContent = 'Resource uploaded successfully!'
+          form.reset()
+        }
+      }
+    </script>
+  </body>
+</html>

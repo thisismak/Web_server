@@ -3,40 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Web Server - Login</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for frame */
+    .frame-container {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #ffffff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    @media (max-width: 640px) {
+      .frame-container {
+        padding: 1rem;
+        margin: 1rem;
+      }
+    }
+  </style>
 </head>
-<body>
-  <h1>Login</h1>
-  <form id="loginForm">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required><br><br>
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required><br><br>
-    <button type="submit">Login</button>
-  </form>
-  <p>Don't have an account? <a href="/register.html">Register</a></p>
+<body class="bg-gray-100 font-sans">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white sticky top-0 shadow-md">
+    <nav class="max-w-1200 mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Smart大檔</h1>
+      <ul class="flex space-x-6">
+        <li><a href="/index.html" class="hover:underline">Home</a></li>
+        <li><a href="/posts.html" class="hover:underline">Posts</a></li>
+        <li><a href="/upload.html" class="hover:underline" id="uploadLink">Upload</a></li>
+        <li><a href="/login.html" class="hover:underline" id="authLink">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="frame-container">
+    <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Login</h2>
+    <form id="login_form" class="space-y-4">
+      <div>
+        <label for="username" class="block text-gray-700">Username</label>
+        <input type="text" name="username" id="username" placeholder="Enter username" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label for="password" class="block text-gray-700">Password</label>
+        <input type="password" name="password" id="password" placeholder="Enter password" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+        Login
+      </button>
+    </form>
+    <p class="mt-4 text-center">
+      Don't have an account? <a href="/register.html" class="text-blue-600 hover:underline">Register</a>
+    </p>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-4">
+    <div class="max-w-1200 mx-auto px-4 text-center">
+      <p>© 2025 Web Server. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
+    // Handle authentication state
+    const token = localStorage.getItem('token');
+    const authLink = document.getElementById('authLink');
+    const uploadLink = document.getElementById('uploadLink');
 
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+    if (token) {
+      authLink.textContent = 'Logout';
+      authLink.href = `/logout?token=${encodeURIComponent(token)}`;
+      // Redirect to posts if already logged in
+      window.location.href = '/posts.html';
+    } else {
+      authLink.textContent = 'Login';
+      authLink.href = '/login.html';
+    }
+
+    // Handle login form submission
+    document.getElementById('login_form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      const username = formData.get('username');
+      const password = formData.get('password');
+      console.log({ username, password });
 
       try {
         const response = await fetch('/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({ username, password }),
         });
 
         const data = await response.json();
+        console.log({ data });
 
         if (!response.ok) {
           throw new Error(data.error || 'Login failed');
         }
 
-        // Store token and redirect to posts.html
         localStorage.setItem('token', data.token);
         window.location.href = '/posts.html';
       } catch (error) {

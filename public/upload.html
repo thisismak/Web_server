@@ -3,96 +3,205 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upload Resource</title>
+  <title>Web Server - Upload</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for frame */
+    .frame-container {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #ffffff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    @media (max-width: 640px) {
+      .frame-container {
+        padding: 1rem;
+        margin: 1rem;
+      }
+    }
+  </style>
 </head>
-<body>
-  <h1>Upload Resource</h1>
-  <form id="uploadForm">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required><br><br>
+<body class="bg-gray-100 font-sans">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white sticky top-0 shadow-md">
+    <nav class="max-w-1200 mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Web Server</h1>
+      <ul class="flex space-x-6">
+        <li><a href="/index.html" class="hover:underline">Home</a></li>
+        <li><a href="/posts.html" class="hover:underline">Posts</a></li>
+        <li><a href="/upload.html" class="hover:underline" id="uploadLink">Upload</a></li>
+        <li><a href="/login.html" class="hover:underline" id="authLink">Login</a></li>
+      </ul>
+    </nav>
+  </header>
 
-    <label for="type">Type:</label>
-    <input type="text" id="type" name="type" required><br><br>
+  <!-- Main Content -->
+  <main class="frame-container">
+    <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Upload a New Post</h2>
+    <form id="upload_form" class="space-y-4">
+      <div>
+        <label for="name" class="block text-gray-700">Name</label>
+        <input type="text" name="name" id="name" placeholder="Enter post name" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label for="type" class="block text-gray-700">Type</label>
+        <input type="text" name="type" id="type" placeholder="Enter type" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label for="function" class="block text-gray-700">Function</label>
+        <input type="text" name="function" id="function" placeholder="Enter function" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label for="features" class="block text-gray-700">Features</label>
+        <input type="text" name="features" id="features" placeholder="Enter features" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label for="category" class="block text-gray-700">Category</label>
+        <input type="text" name="category" id="category" placeholder="Enter category" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label for="tags" class="block text-gray-700">Tags</label>
+        <input type="text" name="tags" id="tags" placeholder="Enter tags" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label for="impact" class="block text-gray-700">Impact</label>
+        <input type="text" name="impact" id="impact" placeholder="Enter impact" required
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label for="image" class="block text-gray-700">Image (optional)</label>
+        <input type="file" name="image" id="image" accept="image/*"
+               class="w-full px-4 py-2 border rounded-lg">
+      </div>
+      <div>
+        <label for="file" class="block text-gray-700">File (optional)</label>
+        <input type="file" name="file" id="file"
+               class="w-full px-4 py-2 border rounded-lg">
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+        Upload
+      </button>
+    </form>
+    <p id="error" class="text-red-600 text-center mt-4 hidden"></p>
+    <p id="success" class="text-green-600 text-center mt-4 hidden"></p>
+    <p id="loading" class="text-gray-600 text-center mt-4 hidden">Loading...</p>
+  </main>
 
-    <label for="function">Function:</label>
-    <input type="text" id="function" name="function" required><br><br>
-
-    <label for="features">Features:</label>
-    <textarea id="features" name="features" required></textarea><br><br>
-
-    <label for="category">Category:</label>
-    <input type="text" id="category" name="category" required><br><br>
-
-    <label for="tags">Tags:</label>
-    <input type="text" id="tags" name="tags" required><br><br>
-
-    <label for="image">Image (optional):</label>
-    <input type="file" id="image" name="image" accept="image/*"><br><br>
-
-    <label for="file">File (optional):</label>
-    <input type="file" id="file" name="file"><br><br>
-
-    <label for="impact">Impact (optional):</label>
-    <textarea id="impact" name="impact"></textarea><br><br>
-
-    <button type="submit">Upload</button>
-  </form>
-  <p><a href="/posts.html">View Posts</a> | <a href="/logout?token=" id="logoutLink">Logout</a></p>
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-4">
+    <div class="max-w-1200 mx-auto px-4 text-center">
+      <p>© 2025 Web Server. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script>
+    // Handle authentication state
     const token = localStorage.getItem('token');
-    if (!token) {
-      alert('Please log in to upload resources');
-      window.location.href = '/login.html';
+    const authLink = document.getElementById('authLink');
+    const uploadLink = document.getElementById('uploadLink');
+
+    if (token) {
+      authLink.textContent = 'Logout';
+      authLink.href = `/logout?token=${encodeURIComponent(token)}`;
+    } else {
+      authLink.textContent = 'Login';
+      authLink.href = '/login.html';
     }
 
-    document.getElementById('logoutLink').href = `/logout?token=${encodeURIComponent(token)}`;
+    // Check authentication
+    async function checkAuth() {
+      const error = document.getElementById('error');
+      const loading = document.getElementById('loading');
 
-    document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+      if (!token) {
+        error.textContent = 'Please login';
+        error.classList.remove('hidden');
+        setTimeout(() => window.location.href = '/login.html', 2000);
+        return false;
+      }
+
+      loading.classList.remove('hidden');
+      try {
+        const response = await fetch('/role', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token,
+          },
+        });
+
+        const data = await response.json();
+        loading.classList.add('hidden');
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Invalid token');
+        }
+
+        return true; // Allow upload if token is valid
+      } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove('hidden');
+        localStorage.removeItem('token');
+        setTimeout(() => window.location.href = '/login.html', 2000);
+        return false;
+      }
+    }
+
+    checkAuth();
+
+    // Handle form submission
+    document.getElementById('upload_form').addEventListener('submit', async (event) => {
       event.preventDefault();
+      const error = document.getElementById('error');
+      const success = document.getElementById('success');
+      const loading = document.getElementById('loading');
+      const form = event.target;
+      const formData = new FormData(form);
+      const token = localStorage.getItem('token');
 
-      const formData = new FormData();
-      formData.append('name', document.getElementById('name').value);
-      formData.append('type', document.getElementById('type').value);
-      formData.append('function', document.getElementById('function').value);
-      formData.append('features', document.getElementById('features').value);
-      formData.append('category', document.getElementById('category').value);
-      formData.append('tags', document.getElementById('tags').value);
-      formData.append('token', token);
-
-      const imageInput = document.getElementById('image');
-      if (imageInput.files[0]) {
-        formData.append('image', imageInput.files[0]);
+      // Client-side validation
+      if (formData.get('name').length < 3) {
+        error.textContent = 'Name must be at least 3 characters';
+        error.classList.remove('hidden');
+        return;
       }
 
-      const fileInput = document.getElementById('file');
-      if (fileInput.files[0]) {
-        formData.append('file', fileInput.files[0]);
-        formData.append('file_name', fileInput.files[0].name);
-        formData.append('file_type', fileInput.files[0].type);
-      }
-
-      const impact = document.getElementById('impact').value;
-      if (impact) {
-        formData.append('impact', impact);
-      }
+      loading.classList.remove('hidden');
+      error.classList.add('hidden');
+      success.classList.add('hidden');
 
       try {
         const response = await fetch('/upload', {
           method: 'POST',
+          headers: {
+            'Authorization': token,
+          },
           body: formData,
         });
 
         const data = await response.json();
+        loading.classList.add('hidden');
 
         if (!response.ok) {
           throw new Error(data.error || 'Upload failed');
         }
 
-        alert('Resource uploaded successfully');
-        window.location.href = '/posts.html';
-      } catch (error) {
-        alert(error.message);
+        success.textContent = 'Upload Success! Redirecting...';
+        success.classList.remove('hidden');
+        setTimeout(() => window.location.href = '/posts.html', 2000);
+      } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove('hidden');
+        loading.classList.add('hidden');
       }
     });
   </script>

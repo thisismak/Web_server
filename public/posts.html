@@ -30,6 +30,11 @@
       font-size: 0.9rem;
       color: var(--ion-color-medium);
     }
+    ion-searchbar {
+      --background: var(--ion-color-light);
+      padding-top: 0;
+      padding-bottom: 8px;
+    }
   </style>
 </head>
 <body>
@@ -85,6 +90,7 @@
           </ion-buttons>
           <ion-title>Smart大檔</ion-title>
         </ion-toolbar>
+        <ion-searchbar placeholder="Search Posts" id="searchBar"></ion-searchbar>
       </ion-header>
       <ion-content class="ion-padding">
         <ion-card>
@@ -111,6 +117,8 @@
     const signOut = document.getElementById('signOut');
     const usernameLabel = document.getElementById('usernameLabel');
     const emailLabel = document.getElementById('emailLabel');
+    const searchBar = document.getElementById('searchBar');
+    let allPosts = [];
 
     async function fetchUser() {
       try {
@@ -172,6 +180,47 @@
       }
     });
 
+    function renderPosts(posts) {
+      const postsContainer = document.getElementById('postsContainer');
+      postsContainer.innerHTML = '';
+
+      if (posts.length === 0) {
+        postsContainer.innerHTML = '<p class="ion-text-center">No posts available.</p>';
+        return;
+      }
+
+      posts.forEach(post => {
+        const postCard = document.createElement('ion-card');
+        postCard.innerHTML = `
+          <ion-card-header>
+            <ion-card-title>${post.name}</ion-card-title>
+            <ion-card-subtitle>Posted by: ${post.username}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item>
+              <ion-label><strong>Type:</strong> ${post.type}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label><strong>Function:</strong> ${post.function}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label><strong>Features:</strong> ${post.features}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label><strong>Category:</strong> ${post.category}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label><strong>Tags:</strong> ${post.tags}</ion-label>
+            </ion-item>
+            ${post.image ? `<img src="/${post.image}" alt="Post Image" class="post-img ion-margin">` : ''}
+            ${post.file_name ? `<ion-item><ion-label><strong>File:</strong> <a href="/download/${post.id}" download="${post.file_name}" class="text-primary">${post.file_name}</a></ion-label></ion-item>` : ''}
+            ${post.impact ? `<ion-item><ion-label><strong>Impact:</strong> ${post.impact}</ion-label></ion-item>` : ''}
+          </ion-card-content>
+        `;
+        postsContainer.appendChild(postCard);
+      });
+    }
+
     async function loadPosts() {
       if (!(await checkAuth())) return;
 
@@ -185,42 +234,8 @@
           throw new Error(data.error || 'Failed to load posts');
         }
 
-        const postsContainer = document.getElementById('postsContainer');
-        if (data.posts.length === 0) {
-          postsContainer.innerHTML = '<p class="ion-text-center">No posts available.</p>';
-          return;
-        }
-
-        data.posts.forEach(post => {
-          const postCard = document.createElement('ion-card');
-          postCard.innerHTML = `
-            <ion-card-header>
-              <ion-card-title>${post.name}</ion-card-title>
-              <ion-card-subtitle>Posted by: ${post.username}</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <ion-item>
-                <ion-label><strong>Type:</strong> ${post.type}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-label><strong>Function:</strong> ${post.function}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-label><strong>Features:</strong> ${post.features}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-label><strong>Category:</strong> ${post.category}</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-label><strong>Tags:</strong> ${post.tags}</ion-label>
-              </ion-item>
-              ${post.image ? `<img src="/${post.image}" alt="Post Image" class="post-img ion-margin">` : ''}
-              ${post.file_name ? `<ion-item><ion-label><strong>File:</strong> <a href="/download/${post.id}" download="${post.file_name}" class="text-primary">${post.file_name}</a></ion-label></ion-item>` : ''}
-              ${post.impact ? `<ion-item><ion-label><strong>Impact:</strong> ${post.impact}</ion-label></ion-item>` : ''}
-            </ion-card-content>
-          `;
-          postsContainer.appendChild(postCard);
-        });
+        allPosts = data.posts;
+        renderPosts(allPosts);
       } catch (error) {
         const toast = document.createElement('ion-toast');
         toast.message = error.message;
@@ -232,6 +247,21 @@
     }
 
     if (token) loadPosts();
+
+    searchBar.addEventListener('ionInput', (event) => {
+      const query = event.target.value.toLowerCase().trim();
+      console.log('Search query:', query);
+
+      if (!query) {
+        renderPosts(allPosts);
+        return;
+      }
+
+      const filteredPosts = allPosts.filter(post => 
+        post.name.toLowerCase().includes(query)
+      );
+      renderPosts(filteredPosts);
+    });
   </script>
 </body>
 </html>

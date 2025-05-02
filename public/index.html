@@ -4,72 +4,113 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart大檔</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
+  <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.min.css"/>
   <style>
-    .frame-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-      background: #ffffff;
-      border-radius: 1rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      min-height: calc(100vh - 12rem);
+    ion-content {
+      --background: var(--ion-color-light);
     }
-    @media (max-width: 640px) {
-      .frame-container {
-        padding: 1rem;
-      }
+    ion-card {
+      margin: 16px;
+    }
+    .post-card img {
+      width: 100%;
+      height: 128px;
+      object-fit: cover;
+      border-radius: 8px;
     }
   </style>
 </head>
-<body class="bg-gray-100 font-sans">
-  <header class="bg-blue-600 text-white sticky top-0 shadow-md z-10">
-    <nav class="max-w-1200 mx-auto px-4 py-4 relative">
-      <div class="absolute top-2 left-2">
-        <button id="menuButton" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center">
-          Menu <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-        </button>
-        <div id="menuDropdown" class="hidden absolute top-12 left-0 bg-white shadow-lg rounded-lg w-48 z-20">
-          <a href="/index.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">User Profile</a>
-          <a href="/my-account.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">My Account</a>
-          <a href="/posts.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Current Folder</a>
-          <a href="/upload.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Upload</a>
-          <a href="/settings.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Settings</a>
-          <a href="/faq.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">FAQ</a>
-          <button id="signOut" class="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100">Sign Out</button>
-        </div>
-      </div>
-      <h1 class="absolute top-2 left-1/2 transform -translate-x-1/2 text-2xl font-bold">Smart大檔</h1>
-    </nav>
-  </header>
+<body>
+  <ion-app>
+    <ion-menu content-id="main-content" type="overlay">
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Menu</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-item href="/index.html">
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+            User Profile
+          </ion-item>
+          <ion-item href="/my-account.html">
+            <ion-icon name="person-circle-outline" slot="start"></ion-icon>
+            My Account
+          </ion-item>
+          <ion-item href="/posts.html">
+            <ion-icon name="folder-outline" slot="start"></ion-icon>
+            Current Folder
+          </ion-item>
+          <ion-item href="/upload.html">
+            <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+            Upload
+          </ion-item>
+          <ion-item href="/settings.html">
+            <ion-icon name="settings-outline" slot="start"></ion-icon>
+            Settings
+          </ion-item>
+          <ion-item href="/faq.html">
+            <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+            FAQ
+          </ion-item>
+          <ion-item button id="signOut">
+            <ion-icon name="log-out-outline" slot="start"></ion-icon>
+            Sign Out
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ion-menu>
 
-  <main class="frame-container my-8">
-    <section class="text-center">
-      <h2 class="text-4xl font-bold text-gray-800 mb-4">Welcome to Cloud Share</h2>
-      <p class="text-lg text-gray-600 mb-6">Share and explore resources with our community. Upload your files, view posts, and connect with others.</p>
-      <div class="flex justify-center space-x-4">
-        <a href="/posts.html" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">View Posts</a>
-        <a href="/login.html" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition" id="loginCta">Login to Upload</a>
-      </div>
-    </section>
+    <div class="ion-page" id="main-content">
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+          </ion-buttons>
+          <ion-title>Smart大檔</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title class="text-3xl">Welcome to Cloud Share</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p class="text-lg mb-4">Share and explore resources with our community. Upload your files, view posts, and connect with others.</p>
+            <div class="ion-text-center">
+              <ion-button href="/posts.html" color="primary">View Posts</ion-button>
+              <ion-button href="/login.html" color="light" id="loginCta">Login to Upload</ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
 
-    <section class="mt-12">
-      <h3 class="text-2xl font-semibold text-gray-800 mb-6">Recent Posts</h3>
-      <div id="postsPreview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-    </section>
-  </main>
-
-  <footer class="bg-gray-800 text-white py-4">
-    <div class="max-w-1200 mx-auto px-4 text-center">
-      <p>© 2025 Web Server. All rights reserved.</p>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Recent Posts</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div id="postsPreview" class="ion-grid">
+              <div class="ion-row"></div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-content>
+      <ion-footer>
+        <ion-toolbar color="dark">
+          <ion-title size="small" class="ion-text-center">
+            © 2025 Web Server. All rights reserved.
+          </ion-title>
+        </ion-toolbar>
+      </ion-footer>
     </div>
-  </footer>
+  </ion-app>
 
   <script>
     const token = localStorage.getItem('token');
     const loginCta = document.getElementById('loginCta');
-    const menuButton = document.getElementById('menuButton');
-    const menuDropdown = document.getElementById('menuDropdown');
     const signOut = document.getElementById('signOut');
 
     if (token) {
@@ -80,23 +121,12 @@
       loginCta.href = '/login.html';
     }
 
-    menuButton.addEventListener('click', () => {
-      menuDropdown.classList.toggle('hidden');
-    });
-
     signOut.addEventListener('click', () => {
       if (token) {
         localStorage.removeItem('token');
         window.location.href = `/logout?token=${encodeURIComponent(token)}`;
       } else {
         window.location.href = '/login.html';
-      }
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (event) => {
-      if (!menuButton.contains(event.target) && !menuDropdown.contains(event.target)) {
-        menuDropdown.classList.add('hidden');
       }
     });
 
@@ -111,28 +141,36 @@
           throw new Error(data.error || 'Failed to load posts');
         }
 
-        const postsContainer = document.getElementById('postsPreview');
+        const postsContainer = document.querySelector('#postsPreview .ion-row');
         const recentPosts = data.posts.slice(0, 3);
         if (recentPosts.length === 0) {
-          postsContainer.innerHTML = '<p class="text-gray-600">No posts yet.</p>';
+          postsContainer.innerHTML = '<ion-col size="12"><p class="ion-text-center">No posts yet.</p></ion-col>';
           return;
         }
 
         recentPosts.forEach(post => {
-          const postDiv = document.createElement('div');
-          postDiv.className = 'bg-gray-50 p-4 rounded-lg shadow hover:shadow-lg transition';
-          postDiv.innerHTML = `
-            <h4 class="text-xl font-semibold text-gray-800">${post.name}</h4>
-            <p class="text-gray-600 mt-2">By ${post.username}</p>
-            ${post.image ? `<img src="/${post.image}" alt="${post.name}" class="mt-2 w-full h-32 object-cover rounded">` : ''}
-            <p class="text-gray-600 mt-2">${post.features.substring(0, 100)}${post.features.length > 100 ? '...' : ''}</p>
-            <a href="/posts.html" class="text-blue-600 mt-2 inline-block hover:underline">View Details</a>
+          const postCol = document.createElement('ion-col');
+          postCol.size = '12';
+          postCol.sizeMd = '6';
+          postCol.sizeLg = '4';
+          postCol.innerHTML = `
+            <ion-card class="post-card">
+              <ion-card-header>
+                <ion-card-title>${post.name}</ion-card-title>
+                <ion-card-subtitle>By ${post.username}</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                ${post.image ? `<img src="/${post.image}" alt="${post.name}" class="mb-2">` : ''}
+                <p>${post.features.substring(0, 100)}${post.features.length > 100 ? '...' : ''}</p>
+                <ion-button href="/posts.html" fill="clear" size="small">View Details</ion-button>
+              </ion-card-content>
+            </ion-card>
           `;
-          postsContainer.appendChild(postDiv);
+          postsContainer.appendChild(postCol);
         });
       } catch (error) {
         console.error('Error loading posts:', error);
-        document.getElementById('postsPreview').innerHTML = '<p class="text-gray-600">Error loading posts.</p>';
+        document.querySelector('#postsPreview .ion-row').innerHTML = '<ion-col size="12"><p class="ion-text-center">Error loading posts.</p></ion-col>';
       }
     }
 

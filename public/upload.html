@@ -4,128 +4,160 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart大檔</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
+  <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.min.css"/>
   <style>
-    .frame-container {
-      max-width: 500px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: #ffffff;
-      border-radius: 1rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    ion-content {
+      --background: var(--ion-color-light);
     }
-    @media (max-width: 640px) {
-      .frame-container {
-        padding: 1rem;
-        margin: 1rem;
-      }
+    ion-card {
+      margin: 16px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
 </head>
-<body class="bg-gray-100 font-sans">
-  <header class="bg-blue-600 text-white sticky top-0 shadow-md z-10">
-    <nav class="max-w-1200 mx-auto px-4 py-4 relative">
-      <div class="absolute top-2 left-2">
-        <button id="menuButton" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center">
-          Menu <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-        </button>
-        <div id="menuDropdown" class="hidden absolute top-12 left-0 bg-white shadow-lg rounded-lg w-48 z-20">
-          <a href="/index.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">User Profile</a>
-          <a href="/my-account.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">My Account</a>
-          <a href="/posts.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Current Folder</a>
-          <a href="/upload.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Upload</a>
-          <a href="/settings.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Settings</a>
-          <a href="/faq.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">FAQ</a>
-          <button id="signOut" class="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100">Sign Out</button>
-        </div>
-      </div>
-      <h1 class="absolute top-2 left-1/2 transform -translate-x-1/2 text-2xl font-bold">Smart大檔</h1>
-    </nav>
-  </header>
+<body>
+  <ion-app>
+    <ion-menu content-id="main-content" type="overlay">
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Menu</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-item href="/index.html">
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+            User Profile
+          </ion-item>
+          <ion-item href="/my-account.html">
+            <ion-icon name="person-circle-outline" slot="start"></ion-icon>
+            My Account
+          </ion-item>
+          <ion-item href="/posts.html">
+            <ion-icon name="folder-outline" slot="start"></ion-icon>
+            Current Folder
+          </ion-item>
+          <ion-item href="/upload.html">
+            <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+            Upload
+          </ion-item>
+          <ion-item href="/settings.html">
+            <ion-icon name="settings-outline" slot="start"></ion-icon>
+            Settings
+          </ion-item>
+          <ion-item href="/faq.html">
+            <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+            FAQ
+          </ion-item>
+          <ion-item button id="signOut">
+            <ion-icon name="log-out-outline" slot="start"></ion-icon>
+            Sign Out
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ion-menu>
 
-  <main class="frame-container">
-    <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Upload a New Post</h2>
-    <form id="upload_form" class="space-y-4">
-      <div>
-        <label for="name" class="block text-gray-700">Name</label>
-        <input type="text" name="name" id="name" placeholder="Enter post name" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="type" class="block text-gray-700">Type</label>
-        <input type="text" name="type" id="type" placeholder="Enter type" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="function" class="block text-gray-700">Function</label>
-        <input type="text" name="function" id="function" placeholder="Enter function" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="features" class="block text-gray-700">Features</label>
-        <input type="text" name="features" id="features" placeholder="Enter features" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="category" class="block text-gray-700">Category</label>
-        <input type="text" name="category" id="category" placeholder="Enter category" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="tags" class="block text-gray-700">Tags</label>
-        <input type="text" name="tags" id="tags" placeholder="Enter tags" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="impact" class="block text-gray-700">Impact</label>
-        <input type="text" name="impact" id="impact" placeholder="Enter impact" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="image" class="block text-gray-700">Image (optional)</label>
-        <input type="file" name="image" id="image" accept="image/*"
-               class="w-full px-4 py-2 border rounded-lg">
-      </div>
-      <div>
-        <label for="file" class="block text-gray-700">File (optional)</label>
-        <input type="file" name="file" id="file"
-               class="w-full px-4 py-2 border rounded-lg">
-      </div>
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-        Upload
-      </button>
-    </form>
-    <p id="error" class="text-red-600 text-center mt-4 hidden"></p>
-    <p id="success" class="text-green-600 text-center mt-4 hidden"></p>
-    <p id="loading" class="text-gray-600 text-center mt-4 hidden">Loading...</p>
-  </main>
-
-  <footer class="bg-gray-800 text-white py-4">
-    <div class="max-w-1200 mx-auto px-4 text-center">
-      <p>© 2025 Web Server. All rights reserved.</p>
+    <div class="ion-page" id="main-content">
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+          </ion-buttons>
+          <ion-title>Smart大檔</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Upload a New Post</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <form id="upload_form" class="ion-padding">
+              <ion-item>
+                <ion-label position="stacked">Name</ion-label>
+                <ion-input type="text" name="name" id="name" placeholder="Enter post name" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Type</ion-label>
+                <ion-input type="text" name="type" id="type" placeholder="Enter type" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Function</ion-label>
+                <ion-input type="text" name="function" id="function" placeholder="Enter function" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Features</ion-label>
+                <ion-input type="text" name="features" id="features" placeholder="Enter features" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Category</ion-label>
+                <ion-input type="text" name="category" id="category" placeholder="Enter category" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Tags</ion-label>
+                <ion-input type="text" name="tags" id="tags" placeholder="Enter tags" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Impact</ion-label>
+                <ion-input type="text" name="impact" id="impact" placeholder="Enter impact" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Image (optional)</ion-label>
+                <ion-input type="file" name="image" id="image" accept="image/*"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">File (optional)</ion-label>
+                <ion-input type="file" name="file" id="file"></ion-input>
+              </ion-item>
+              <ion-button expand="block" type="submit" color="primary" class="ion-margin-top" disabled id="submitButton">Upload</ion-button>
+            </form>
+            <p id="error" class="ion-text-center ion-margin-top text-danger hidden"></p>
+            <p id="success" class="ion-text-center ion-margin-top text-success hidden"></p>
+            <p id="loading" class="ion-text-center ion-margin-top hidden">
+              <ion-spinner name="lines"></ion-spinner> Waiting to complete the upload...
+            </p>
+          </ion-card-content>
+        </ion-card>
+      </ion-content>
+      <ion-footer>
+        <ion-toolbar color="dark">
+          <ion-title size="small" class="ion-text-center">
+            © 2025 Web Server. All rights reserved.
+          </ion-title>
+        </ion-toolbar>
+      </ion-footer>
     </div>
-  </footer>
+  </ion-app>
 
   <script>
     const token = localStorage.getItem('token');
-    const menuButton = document.getElementById('menuButton');
-    const menuDropdown = document.getElementById('menuDropdown');
     const signOut = document.getElementById('signOut');
+    const uploadForm = document.getElementById('upload_form');
+    const submitButton = document.getElementById('submitButton');
+    const error = document.getElementById('error');
+    const loading = document.getElementById('loading');
 
     async function checkAuth() {
-      const error = document.getElementById('error');
-      const loading = document.getElementById('loading');
-
       if (!token) {
         error.textContent = 'Please login';
         error.classList.remove('hidden');
-        window.location.href = '/login.html';
+        const toast = document.createElement('ion-toast');
+        toast.message = 'Please log in to upload';
+        toast.duration = 2000;
+        toast.color = 'danger';
+        document.body.appendChild(toast);
+        toast.present().then(() => {
+          setTimeout(() => window.location.href = '/login.html', 2000);
+        });
         return false;
       }
 
       loading.classList.remove('hidden');
       try {
-        console.log('Checking auth with token:', token);
         const response = await fetch('/role', {
           method: 'GET',
           headers: {
@@ -138,25 +170,26 @@
         loading.classList.add('hidden');
 
         if (!response.ok) {
-          console.error('Role check failed:', data.error);
           throw new Error(data.error || 'Invalid token');
         }
 
-        console.log('Auth successful:', data);
         return true;
       } catch (err) {
-        console.error('Auth error:', err.message);
-        error.textContent = err.message;
+        loading.classList.add('hidden');
+        error.textContent = err.message || 'Failed to verify authentication';
         error.classList.remove('hidden');
         localStorage.removeItem('token');
-        window.location.href = '/login.html';
+        const toast = document.createElement('ion-toast');
+        toast.message = err.message || 'Authentication failed';
+        toast.duration = 2000;
+        toast.color = 'danger';
+        document.body.appendChild(toast);
+        toast.present().then(() => {
+          setTimeout(() => window.location.href = '/login.html', 2000);
+        });
         return false;
       }
     }
-
-    const uploadForm = document.getElementById('upload_form');
-    const submitButton = uploadForm.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
 
     checkAuth().then(isAuthenticated => {
       if (isAuthenticated) {
@@ -166,22 +199,12 @@
       }
     });
 
-    menuButton.addEventListener('click', () => {
-      menuDropdown.classList.toggle('hidden');
-    });
-
     signOut.addEventListener('click', () => {
       if (token) {
         localStorage.removeItem('token');
         window.location.href = `/logout?token=${encodeURIComponent(token)}`;
       } else {
         window.location.href = '/login.html';
-      }
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!menuButton.contains(event.target) && !menuDropdown.contains(event.target)) {
-        menuDropdown.classList.add('hidden');
       }
     });
 
@@ -195,14 +218,19 @@
 
       const currentToken = localStorage.getItem('token');
       if (!currentToken) {
-        console.error('Token missing during submission');
         error.textContent = 'Please login to upload';
         error.classList.remove('hidden');
-        window.location.href = '/login.html';
+        const toast = document.createElement('ion-toast');
+        toast.message = 'Please log in to upload';
+        toast.duration = 2000;
+        toast.color = 'danger';
+        document.body.appendChild(toast);
+        toast.present().then(() => {
+          setTimeout(() => window.location.href = '/login.html', 2000);
+        });
         return;
       }
 
-      // Append token to formData to match server expectation
       formData.append('token', currentToken);
 
       if (formData.get('name').length < 3) {
@@ -216,7 +244,6 @@
       success.classList.add('hidden');
 
       try {
-        console.log('Submitting with token:', currentToken);
         const response = await fetch('/upload', {
           method: 'POST',
           headers: {
@@ -229,7 +256,6 @@
         loading.classList.add('hidden');
 
         if (!response.ok) {
-          console.error('Upload failed:', data.error);
           throw new Error(data.error || 'Upload failed');
         }
 
@@ -237,7 +263,6 @@
         success.classList.remove('hidden');
         setTimeout(() => window.location.href = '/posts.html', 2000);
       } catch (err) {
-        console.error('Upload error:', err);
         error.textContent = err.message;
         error.classList.remove('hidden');
         loading.classList.add('hidden');

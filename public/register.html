@@ -3,88 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Server - Register</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Smart大檔</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
+  <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.min.css"/>
   <style>
-    /* Custom styles for frame */
-    .frame-container {
-      max-width: 500px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: #ffffff;
-      border-radius: 1rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    ion-content {
+      --background: var(--ion-color-light);
     }
-    @media (max-width: 640px) {
-      .frame-container {
-        padding: 1rem;
-        margin: 1rem;
-      }
+    ion-card {
+      margin: 16px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
 </head>
-<body class="bg-gray-100 font-sans">
-  <!-- Header -->
-  <header class="bg-blue-600 text-white sticky top-0 shadow-md">
-    <nav class="max-w-1200 mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold">Smart大檔</h1>
-      <ul class="flex space-x-6">
-        <li><a href="/index.html" class="hover:underline">Home</a></li>
-        <li><a href="/posts.html" class="hover:underline">Posts</a></li>
-        <li><a href="/upload.html" class="hover:underline" id="uploadLink">Upload</a></li>
-        <li><a href="/login.html" class="hover:underline" id="authLink">Login</a></li>
-      </ul>
-    </nav>
-  </header>
+<body>
+  <ion-app>
+    <ion-menu content-id="main-content" type="overlay">
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Menu</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-item href="/index.html">
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+            User Profile
+          </ion-item>
+          <ion-item href="/my-account.html">
+            <ion-icon name="person-circle-outline" slot="start"></ion-icon>
+            My Account
+          </ion-item>
+          <ion-item href="/posts.html">
+            <ion-icon name="folder-outline" slot="start"></ion-icon>
+            Current Folder
+          </ion-item>
+          <ion-item href="/upload.html">
+            <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+            Upload
+          </ion-item>
+          <ion-item href="/settings.html">
+            <ion-icon name="settings-outline" slot="start"></ion-icon>
+            Settings
+          </ion-item>
+          <ion-item href="/faq.html">
+            <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+            FAQ
+          </ion-item>
+          <ion-item button id="signOut">
+            <ion-icon name="log-out-outline" slot="start"></ion-icon>
+            Sign Out
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ion-menu>
 
-  <!-- Main Content -->
-  <main class="frame-container">
-    <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Create Your Account</h2>
-    <form id="register_form" class="space-y-4">
-      <div>
-        <label for="username" class="block text-gray-700">Username</label>
-        <input type="text" name="username" id="username" placeholder="Enter username" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="password" class="block text-gray-700">Password</label>
-        <input type="password" name="password" id="password" placeholder="Enter password" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-        Register
-      </button>
-    </form>
-    <p class="mt-4 text-center">
-      Already have an account? <a href="/login.html" class="text-blue-600 hover:underline">Login</a>
-    </p>
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white py-4">
-    <div class="max-w-1200 mx-auto px-4 text-center">
-      <p>© 2025 Web Server. All rights reserved.</p>
+    <div class="ion-page" id="main-content">
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+          </ion-buttons>
+          <ion-title>Smart大檔</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Create Your Account</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <form id="register_form" class="ion-padding">
+              <ion-item>
+                <ion-label position="stacked">Username</ion-label>
+                <ion-input type="text" name="username" id="username" placeholder="Enter username" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Password</ion-label>
+                <ion-input type="password" name="password" id="password" placeholder="Enter password" required></ion-input>
+              </ion-item>
+              <ion-button expand="block" type="submit" color="primary" class="ion-margin-top">Register</ion-button>
+            </form>
+            <p class="ion-text-center ion-margin-top">
+              Already have an account? <a href="/login.html" class="text-primary">Login</a>
+            </p>
+          </ion-card-content>
+        </ion-card>
+      </ion-content>
+      <ion-footer>
+        <ion-toolbar color="dark">
+          <ion-title size="small" class="ion-text-center">
+            © 2025 Web Server. All rights reserved.
+          </ion-title>
+        </ion-toolbar>
+      </ion-footer>
     </div>
-  </footer>
+  </ion-app>
 
   <script>
-    // Handle authentication state
     const token = localStorage.getItem('token');
-    const authLink = document.getElementById('authLink');
-    const uploadLink = document.getElementById('uploadLink');
+    const signOut = document.getElementById('signOut');
 
     if (token) {
-      authLink.textContent = 'Logout';
-      authLink.href = `/logout?token=${encodeURIComponent(token)}`;
-      // Redirect to posts if already logged in
       window.location.href = '/posts.html';
-    } else {
-      authLink.textContent = 'Login';
-      authLink.href = '/login.html';
     }
 
-    // Handle register form submission
+    signOut.addEventListener('click', () => {
+      if (token) {
+        localStorage.removeItem('token');
+        window.location.href = `/logout?token=${encodeURIComponent(token)}`;
+      } else {
+        window.location.href = '/login.html';
+      }
+    });
+
     document.getElementById('register_form').addEventListener('submit', async (event) => {
       event.preventDefault();
       const form = event.target;
@@ -109,10 +144,21 @@
           throw new Error(data.error || 'Registration failed');
         }
 
-        alert('Register Success');
-        window.location.href = '/login.html';
+        const toast = document.createElement('ion-toast');
+        toast.message = 'Register Success';
+        toast.duration = 2000;
+        toast.color = 'success';
+        document.body.appendChild(toast);
+        toast.present().then(() => {
+          setTimeout(() => window.location.href = '/login.html', 2000);
+        });
       } catch (error) {
-        alert(error.message);
+        const toast = document.createElement('ion-toast');
+        toast.message = error.message;
+        toast.duration = 2000;
+        toast.color = 'danger';
+        document.body.appendChild(toast);
+        toast.present();
       }
     });
   </script>

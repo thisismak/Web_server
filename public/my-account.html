@@ -44,25 +44,10 @@
   </header>
 
   <main class="frame-container">
-    <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Login</h2>
-    <form id="login_form" class="space-y-4">
-      <div>
-        <label for="username" class="block text-gray-700">Username</label>
-        <input type="text" name="username" id="username" placeholder="Enter username" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label for="password" class="block text-gray-700">Password</label>
-        <input type="password" name="password" id="password" placeholder="Enter password" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-        Login
-      </button>
-    </form>
-    <p class="mt-4 text-center">
-      Don't have an account? <a href="/register.html" class="text-blue-600 hover:underline">Register</a>
-    </p>
+    <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">My Account</h2>
+    <div id="userInfo" class="space-y-4">
+      <p class="text-gray-600">Loading user information...</p>
+    </div>
   </main>
 
   <footer class="bg-gray-800 text-white py-4">
@@ -78,58 +63,57 @@
     const signOut = document.getElementById('signOut');
 
     if (token) {
-      window.location.href = '/posts.html';
+      menuButton.addEventListener('click', () => {
+        menuDropdown.classList.toggle('hidden');
+      });
+
+      signOut.addEventListener('click', () => {
+        if (token) {
+          localStorage.removeItem('token');
+          window.location.href = `/logout?token=${encodeURIComponent(token)}`;
+        } else {
+          window.location.href = '/login.html';
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!menuButton.contains(event.target) && !menuDropdown.contains(event.target)) {
+          menuDropdown.classList.add('hidden');
+        }
+      });
+    } else {
+      alert('Please log in to view your account');
+      window.location.href = '/login.html';
     }
 
-    menuButton.addEventListener('click', () => {
-      menuDropdown.classList.toggle('hidden');
-    });
-
-    signOut.addEventListener('click', () => {
-      if (token) {
-        localStorage.removeItem('token');
-        window.location.href = `/logout?token=${encodeURIComponent(token)}`;
-      } else {
-        window.location.href = '/login.html';
-      }
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!menuButton.contains(event.target) && !menuDropdown.contains(event.target)) {
-        menuDropdown.classList.add('hidden');
-      }
-    });
-
-    document.getElementById('login_form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = event.target;
-      const formData = new FormData(form);
-      const username = formData.get('username');
-      const password = formData.get('password');
-      console.log({ username, password });
-
+    async function loadUserInfo() {
       try {
-        const response = await fetch('/login', {
-          method: 'POST',
+        const response = await fetch('/user', {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': token,
           },
-          body: JSON.stringify({ username, password }),
         });
-
         const data = await response.json();
-        console.log({ data });
-
         if (!response.ok) {
-          throw new Error(data.error || 'Login failed');
+          throw new Error(data.error || 'Failed to load user info');
         }
 
-        localStorage.setItem('token', data.token);
-        window.location.href = '/posts.html';
+        const userInfo = document.getElementById('userInfo');
+        userInfo.innerHTML = `
+          <p><strong>Username:</strong> ${data.username}</p>
+          <p><strong>Email:</strong> ${data.email || 'Not set'}</p>
+          ${data.avatar ? `<img src="/${data.avatar}" alt="Avatar" class="w-24 h-24 rounded-full mx-auto">` : '<p><strong>Avatar:</strong> Not set</p>'}
+        `;
       } catch (error) {
         alert(error.message);
+        localStorage.removeItem('token');
+        window.location.href = '/login.html';
       }
-    });
+    }
+
+    if (token) loadUserInfo();
   </script>
 </body>
 </html>

@@ -14,3 +14,9 @@ proxy.ts
 dist/
 # 上傳文件
 uploads/
+*.tgz
+.env
+.env.*
+!.env.example
+dump.sql
+*.xz

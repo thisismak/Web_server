@@ -3,31 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Posts</title>
+  <title>Smart大檔</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    .frame-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #ffffff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      min-height: calc(100vh - 12rem);
+    }
+    @media (max-width: 640px) {
+      .frame-container {
+        padding: 1rem;
+        margin: 1rem;
+      }
+    }
     .post {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin: 10px 0;
+      border: 1px solid #e5e7eb;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
     }
     .post img {
       max-width: 200px;
+      border-radius: 0.25rem;
     }
   </style>
 </head>
-<body>
-  <h1>Posts</h1>
-  <p><a href="/upload.html">Upload New Resource</a> | <a href="/logout?token=" id="logoutLink">Logout</a></p>
-  <div id="postsContainer"></div>
+<body class="bg-gray-100 font-sans">
+  <header class="bg-blue-600 text-white sticky top-0 shadow-md z-10">
+    <nav class="max-w-1200 mx-auto px-4 py-4 relative">
+      <div class="absolute top-2 left-2">
+        <button id="menuButton" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center">
+          Menu <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="menuDropdown" class="hidden absolute top-12 left-0 bg-white shadow-lg rounded-lg w-48 z-20">
+          <a href="/index.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">User Profile</a>
+          <a href="/my-account.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">My Account</a>
+          <a href="/posts.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Current Folder</a>
+          <a href="/upload.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Upload</a>
+          <a href="/settings.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Settings</a>
+          <a href="/faq.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">FAQ</a>
+          <button id="signOut" class="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100">Sign Out</button>
+        </div>
+      </div>
+      <h1 class="absolute top-2 left-1/2 transform -translate-x-1/2 text-2xl font-bold">Smart大檔</h1>
+    </nav>
+  </header>
+
+  <main class="frame-container">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Posts</h2>
+    <div id="postsContainer" class="space-y-4"></div>
+  </main>
+
+  <footer class="bg-gray-800 text-white py-4">
+    <div class="max-w-1200 mx-auto px-4 text-center">
+      <p>© 2025 Web Server. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script>
     const token = localStorage.getItem('token');
+    const menuButton = document.getElementById('menuButton');
+    const menuDropdown = document.getElementById('menuDropdown');
+    const signOut = document.getElementById('signOut');
+
     if (!token) {
       alert('Please log in to view posts');
       window.location.href = '/login.html';
     }
 
-    document.getElementById('logoutLink').href = `/logout?token=${encodeURIComponent(token)}`;
+    menuButton.addEventListener('click', () => {
+      menuDropdown.classList.toggle('hidden');
+    });
+
+    signOut.addEventListener('click', () => {
+      if (token) {
+        localStorage.removeItem('token');
+        window.location.href = `/logout?token=${encodeURIComponent(token)}`;
+      } else {
+        window.location.href = '/login.html';
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!menuButton.contains(event.target) && !menuDropdown.contains(event.target)) {
+        menuDropdown.classList.add('hidden');
+      }
+    });
 
     async function loadPosts() {
       try {
@@ -35,30 +101,31 @@
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
-
         const data = await response.json();
-
         if (!response.ok) {
           throw new Error(data.error || 'Failed to load posts');
         }
 
         const postsContainer = document.getElementById('postsContainer');
-        postsContainer.innerHTML = '';
+        if (data.posts.length === 0) {
+          postsContainer.innerHTML = '<p class="text-gray-600">No posts available.</p>';
+          return;
+        }
 
         data.posts.forEach(post => {
           const postDiv = document.createElement('div');
-          postDiv.className = 'post';
+          postDiv.className = 'post bg-gray-50';
           postDiv.innerHTML = `
-            <h3>${post.name}</h3>
-            <p><strong>Posted by:</strong> ${post.username}</p>
-            <p><strong>Type:</strong> ${post.type}</p>
-            <p><strong>Function:</strong> ${post.function}</p>
-            <p><strong>Features:</strong> ${post.features}</p>
-            <p><strong>Category:</strong> ${post.category}</p>
-            <p><strong>Tags:</strong> ${post.tags}</p>
+            <h3 class="text-xl font-semibold text-gray-800">${post.name}</h3>
+            <p class="text-gray-600"><strong>Posted by:</strong> ${post.username}</p>
+            <p class="text-gray-600"><strong>Type:</strong> ${post.type}</p>
+            <p class="text-gray-600"><strong>Function:</strong> ${post.function}</p>
+            <p class="text-gray-600"><strong>Features:</strong> ${post.features}</p>
+            <p class="text-gray-600"><strong>Category:</strong> ${post.category}</p>
+            <p class="text-gray-600"><strong>Tags:</strong> ${post.tags}</p>
             ${post.image ? `<p><strong>Image:</strong><br><img src="/${post.image}" alt="Post Image"></p>` : ''}
-            ${post.file_name ? `<p><strong>File:</strong> <a href="/download/${post.id}" download="${post.file_name}">${post.file_name}</a></p>` : ''}
-            ${post.impact ? `<p><strong>Impact:</strong> ${post.impact}</p>` : ''}
+            ${post.file_name ? `<p><strong>File:</strong> <a href="/download/${post.id}" download="${post.file_name}" class="text-blue-600 hover:underline">${post.file_name}</a></p>` : ''}
+            ${post.impact ? `<p class="text-gray-600"><strong>Impact:</strong> ${post.impact}</p>` : ''}
           `;
           postsContainer.appendChild(postDiv);
         });
@@ -67,7 +134,7 @@
       }
     }
 
-    loadPosts();
+    if (token) loadPosts();
   </script>
 </body>
 </html>

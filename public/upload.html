@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Server - Upload</title>
-  <!-- Tailwind CSS CDN -->
+  <title>Smart大檔</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Custom styles for frame */
     .frame-container {
       max-width: 500px;
       margin: 2rem auto;
@@ -25,20 +23,26 @@
   </style>
 </head>
 <body class="bg-gray-100 font-sans">
-  <!-- Header -->
-  <header class="bg-blue-600 text-white sticky top-0 shadow-md">
-    <nav class="max-w-1200 mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold">Web Server</h1>
-      <ul class="flex space-x-6">
-        <li><a href="/index.html" class="hover:underline">Home</a></li>
-        <li><a href="/posts.html" class="hover:underline">Posts</a></li>
-        <li><a href="/upload.html" class="hover:underline" id="uploadLink">Upload</a></li>
-        <li><a href="/login.html" class="hover:underline" id="authLink">Login</a></li>
-      </ul>
+  <header class="bg-blue-600 text-white sticky top-0 shadow-md z-10">
+    <nav class="max-w-1200 mx-auto px-4 py-4 relative">
+      <div class="absolute top-2 left-2">
+        <button id="menuButton" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center">
+          Menu <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="menuDropdown" class="hidden absolute top-12 left-0 bg-white shadow-lg rounded-lg w-48 z-20">
+          <a href="/index.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">User Profile</a>
+          <a href="/my-account.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">My Account</a>
+          <a href="/posts.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Current Folder</a>
+          <a href="/upload.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Upload</a>
+          <a href="/settings.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Settings</a>
+          <a href="/faq.html" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">FAQ</a>
+          <button id="signOut" class="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100">Sign Out</button>
+        </div>
+      </div>
+      <h1 class="absolute top-2 left-1/2 transform -translate-x-1/2 text-2xl font-bold">Smart大檔</h1>
     </nav>
   </header>
 
-  <!-- Main Content -->
   <main class="frame-container">
     <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Upload a New Post</h2>
     <form id="upload_form" class="space-y-4">
@@ -96,7 +100,6 @@
     <p id="loading" class="text-gray-600 text-center mt-4 hidden">Loading...</p>
   </main>
 
-  <!-- Footer -->
   <footer class="bg-gray-800 text-white py-4">
     <div class="max-w-1200 mx-auto px-4 text-center">
       <p>© 2025 Web Server. All rights reserved.</p>
@@ -104,20 +107,11 @@
   </footer>
 
   <script>
-    // Handle authentication state
     const token = localStorage.getItem('token');
-    const authLink = document.getElementById('authLink');
-    const uploadLink = document.getElementById('uploadLink');
+    const menuButton = document.getElementById('menuButton');
+    const menuDropdown = document.getElementById('menuDropdown');
+    const signOut = document.getElementById('signOut');
 
-    if (token) {
-      authLink.textContent = 'Logout';
-      authLink.href = `/logout?token=${encodeURIComponent(token)}`;
-    } else {
-      authLink.textContent = 'Login';
-      authLink.href = '/login.html';
-    }
-
-    // Check authentication
     async function checkAuth() {
       const error = document.getElementById('error');
       const loading = document.getElementById('loading');
@@ -125,12 +119,13 @@
       if (!token) {
         error.textContent = 'Please login';
         error.classList.remove('hidden');
-        setTimeout(() => window.location.href = '/login.html', 2000);
+        window.location.href = '/login.html';
         return false;
       }
 
       loading.classList.remove('hidden');
       try {
+        console.log('Checking auth with token:', token);
         const response = await fetch('/role', {
           method: 'GET',
           headers: {
@@ -143,32 +138,73 @@
         loading.classList.add('hidden');
 
         if (!response.ok) {
+          console.error('Role check failed:', data.error);
           throw new Error(data.error || 'Invalid token');
         }
 
-        return true; // Allow upload if token is valid
+        console.log('Auth successful:', data);
+        return true;
       } catch (err) {
+        console.error('Auth error:', err.message);
         error.textContent = err.message;
         error.classList.remove('hidden');
         localStorage.removeItem('token');
-        setTimeout(() => window.location.href = '/login.html', 2000);
+        window.location.href = '/login.html';
         return false;
       }
     }
 
-    checkAuth();
+    const uploadForm = document.getElementById('upload_form');
+    const submitButton = uploadForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
 
-    // Handle form submission
-    document.getElementById('upload_form').addEventListener('submit', async (event) => {
+    checkAuth().then(isAuthenticated => {
+      if (isAuthenticated) {
+        submitButton.disabled = false;
+      } else {
+        submitButton.disabled = true;
+      }
+    });
+
+    menuButton.addEventListener('click', () => {
+      menuDropdown.classList.toggle('hidden');
+    });
+
+    signOut.addEventListener('click', () => {
+      if (token) {
+        localStorage.removeItem('token');
+        window.location.href = `/logout?token=${encodeURIComponent(token)}`;
+      } else {
+        window.location.href = '/login.html';
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!menuButton.contains(event.target) && !menuDropdown.contains(event.target)) {
+        menuDropdown.classList.add('hidden');
+      }
+    });
+
+    uploadForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       const error = document.getElementById('error');
       const success = document.getElementById('success');
       const loading = document.getElementById('loading');
       const form = event.target;
       const formData = new FormData(form);
-      const token = localStorage.getItem('token');
 
-      // Client-side validation
+      const currentToken = localStorage.getItem('token');
+      if (!currentToken) {
+        console.error('Token missing during submission');
+        error.textContent = 'Please login to upload';
+        error.classList.remove('hidden');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      // Append token to formData to match server expectation
+      formData.append('token', currentToken);
+
       if (formData.get('name').length < 3) {
         error.textContent = 'Name must be at least 3 characters';
         error.classList.remove('hidden');
@@ -180,10 +216,11 @@
       success.classList.add('hidden');
 
       try {
+        console.log('Submitting with token:', currentToken);
         const response = await fetch('/upload', {
           method: 'POST',
           headers: {
-            'Authorization': token,
+            'Authorization': currentToken,
           },
           body: formData,
         });
@@ -192,6 +229,7 @@
         loading.classList.add('hidden');
 
         if (!response.ok) {
+          console.error('Upload failed:', data.error);
           throw new Error(data.error || 'Upload failed');
         }
 
@@ -199,6 +237,7 @@
         success.classList.remove('hidden');
         setTimeout(() => window.location.href = '/posts.html', 2000);
       } catch (err) {
+        console.error('Upload error:', err);
         error.textContent = err.message;
         error.classList.remove('hidden');
         loading.classList.add('hidden');

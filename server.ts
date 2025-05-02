@@ -6,13 +6,11 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Define interfaces for SQLite query results
 interface User {
   id: number;
   username: string;
@@ -44,7 +42,6 @@ interface Post {
   username?: string;
 }
 
-// Define interface for Multer file
 interface MulterFile {
   fieldname: string;
   originalname: string;
@@ -56,7 +53,6 @@ interface MulterFile {
   size: number;
 }
 
-// Initialize SQLite database
 const db = new sqlite3.Database('db.sqlite3', (err) => {
   if (err) {
     console.error('Database connection error:', err.message);
@@ -65,10 +61,8 @@ const db = new sqlite3.Database('db.sqlite3', (err) => {
   }
 });
 
-// Initialize Express app
 const server: Application = express();
 
-// Configure multer for file uploads to disk
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -82,7 +76,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 server.use(express.static('public'));
-server.use('/Uploads', express.static(uploadDir)); // Serve uploads for images
+server.use('/Uploads', express.static(uploadDir));
 server.use(express.urlencoded({ extended: true }));
 server.use(express.json({ limit: '10mb' }));
 
@@ -183,7 +177,7 @@ const logoutHandler: RequestHandler = (req: Request, res: Response): void => {
 server.get('/logout', logoutHandler);
 
 const roleHandler: RequestHandler = (req: Request, res: Response): void => {
-  const token = req.query.token as string || '';
+  const token = req.headers.authorization || req.query.token as string || '';
   db.get('SELECT user_id FROM session WHERE token = ?', [token], (err, session: Session | undefined) => {
     if (err) {
       console.error('Database error:', err.message);
@@ -198,6 +192,97 @@ const roleHandler: RequestHandler = (req: Request, res: Response): void => {
 };
 
 server.get('/role', roleHandler);
+
+const userHandler: RequestHandler = (req: Request, res: Response): void => {
+  const token = req.headers.authorization || '';
+  db.get('SELECT user_id FROM session WHERE token = ?', [token], (err, session: Session | undefined) => {
+    if (err) {
+      console.error('Database error:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    if (!session) {
+      res.status(401).json({ error: 'Invalid token' });
+      return;
+    }
+    db.get('SELECT username, email, avatar FROM user WHERE id = ?', [session.user_id], (err, user: User | undefined) => {
+      if (err) {
+        console.error('Database error:', err.message);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+      res.status(200).json(user);
+    });
+  });
+};
+
+server.get('/user', userHandler);
+
+const updateProfileHandler: RequestHandler = (req: Request, res: Response): void => {
+  upload.single('avatar')(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+
+    const token = req.headers.authorization || '';
+    const { email, password } = req.body;
+    const file = req.file as MulterFile | undefined;
+    const avatarPath = file ? path.join('Uploads', file.filename) : null;
+
+    db.get('SELECT user_id FROM session WHERE token = ?', [token], (err, session: Session | undefined) => {
+      if (err) {
+        console.error('Database error:', err.message);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      if (!session) {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
+      }
+
+      const updates: string[] = [];
+      const values: (string | null)[] = [];
+
+      if (email) {
+        updates.push('email = ?');
+        values.push(email);
+      }
+      if (password) {
+        updates.push('password = ?');
+        values.push(password);
+      }
+      if (avatarPath) {
+        updates.push('avatar = ?');
+        values.push(avatarPath);
+      }
+
+      if (updates.length === 0) {
+        res.status(400).json({ error: 'No fields to update' });
+        return;
+      }
+
+      values.push(session.user_id.toString());
+      const query = `UPDATE user SET ${updates.join(', ')} WHERE id = ?`;
+
+      db.run(query, values, (err) => {
+        if (err) {
+          console.error('Update user error:', err.message);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+        }
+        res.status(200).json({ message: 'Profile updated successfully' });
+      });
+    });
+  });
+};
+
+server.post('/update-profile', updateProfileHandler);
 
 const postsHandler: RequestHandler = (req: Request, res: Response): void => {
   db.all(
@@ -246,11 +331,10 @@ const uploadHandler: RequestHandler = (req: Request, res: Response): void => {
         return;
       }
 
-      // Explicitly type req.files as an object with field names
       const files = req.files as { [fieldname: string]: MulterFile[] } | undefined;
 
-      const imagePath = files?.['image']?.[0] ? path.join('uploads', files['image'][0].filename) : null;
-      const filePath = files?.['file']?.[0] ? path.join('uploads', files['file'][0].filename) : null;
+      const imagePath = files?.['image']?.[0] ? path.join('Uploads', files['image'][0].filename) : null;
+      const filePath = files?.['file']?.[0] ? path.join('Uploads', files['file'][0].filename) : null;
 
       db.run(
         'INSERT INTO post (user_id, name, type, function, features, category, tags, image, file, file_name, file_type, impact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

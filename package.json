@@ -46,5 +46,13 @@
       "better-sqlite3"
     ]
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thisismak/Web_server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thisismak/Web_server/issues"
+  },
+  "homepage": "https://github.com/thisismak/Web_server#readme",
   "description": ""
 }

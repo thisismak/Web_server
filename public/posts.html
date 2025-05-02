@@ -35,6 +35,10 @@
       padding-top: 0;
       padding-bottom: 8px;
     }
+    ion-segment {
+      --background: var(--ion-color-light);
+      padding-bottom: 8px;
+    }
   </style>
 </head>
 <body>
@@ -91,6 +95,14 @@
           <ion-title>Smart大檔</ion-title>
         </ion-toolbar>
         <ion-searchbar placeholder="Search Posts" id="searchBar"></ion-searchbar>
+        <ion-segment id="sortBar" value="asc">
+          <ion-segment-button value="asc">
+            <ion-label>A-Z</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="desc">
+            <ion-label>Z-A</ion-label>
+          </ion-segment-button>
+        </ion-segment>
       </ion-header>
       <ion-content class="ion-padding">
         <ion-card>
@@ -118,7 +130,9 @@
     const usernameLabel = document.getElementById('usernameLabel');
     const emailLabel = document.getElementById('emailLabel');
     const searchBar = document.getElementById('searchBar');
+    const sortBar = document.getElementById('sortBar');
     let allPosts = [];
+    let currentQuery = '';
 
     async function fetchUser() {
       try {
@@ -221,6 +235,31 @@
       });
     }
 
+    function applyFiltersAndSort() {
+      let filteredPosts = allPosts;
+
+      // Apply search filter if query exists
+      if (currentQuery) {
+        filteredPosts = allPosts.filter(post => 
+          post.name.toLowerCase().includes(currentQuery)
+        );
+      }
+
+      // Apply sorting
+      const sortOrder = sortBar.value;
+      filteredPosts = [...filteredPosts].sort((a, b) => {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (sortOrder === 'asc') {
+          return nameA.localeCompare(nameB);
+        } else {
+          return nameB.localeCompare(nameA);
+        }
+      });
+
+      renderPosts(filteredPosts);
+    }
+
     async function loadPosts() {
       if (!(await checkAuth())) return;
 
@@ -235,7 +274,7 @@
         }
 
         allPosts = data.posts;
-        renderPosts(allPosts);
+        applyFiltersAndSort();
       } catch (error) {
         const toast = document.createElement('ion-toast');
         toast.message = error.message;
@@ -249,18 +288,14 @@
     if (token) loadPosts();
 
     searchBar.addEventListener('ionInput', (event) => {
-      const query = event.target.value.toLowerCase().trim();
-      console.log('Search query:', query);
+      currentQuery = event.target.value.toLowerCase().trim();
+      console.log('Search query:', currentQuery);
+      applyFiltersAndSort();
+    });
 
-      if (!query) {
-        renderPosts(allPosts);
-        return;
-      }
-
-      const filteredPosts = allPosts.filter(post => 
-        post.name.toLowerCase().includes(query)
-      );
-      renderPosts(filteredPosts);
+    sortBar.addEventListener('ionChange', () => {
+      console.log('Sort order:', sortBar.value);
+      applyFiltersAndSort();
     });
   </script>
 </body>

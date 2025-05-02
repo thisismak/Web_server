@@ -18,6 +18,18 @@
       max-width: 200px;
       border-radius: 4px;
     }
+    .user-profile-item {
+      --padding-start: 16px;
+      --inner-padding-end: 16px;
+    }
+    .user-profile-label {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .user-profile-email {
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+    }
   </style>
 </head>
 <body>
@@ -30,9 +42,12 @@
       </ion-header>
       <ion-content>
         <ion-list>
-          <ion-item href="/index.html">
+          <ion-item href="/index.html" class="user-profile-item" id="userProfileItem">
             <ion-icon name="person-outline" slot="start"></ion-icon>
-            User Profile
+            <ion-label>
+              <div class="user-profile-label" id="usernameLabel">Loading...</div>
+              <div class="user-profile-email" id="emailLabel">Loading...</div>
+            </ion-label>
           </ion-item>
           <ion-item href="/my-account.html">
             <ion-icon name="person-circle-outline" slot="start"></ion-icon>
@@ -94,16 +109,58 @@
   <script>
     const token = localStorage.getItem('token');
     const signOut = document.getElementById('signOut');
+    const usernameLabel = document.getElementById('usernameLabel');
+    const emailLabel = document.getElementById('emailLabel');
 
-    if (!token) {
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Please log in to view posts';
-      toast.duration = 2000;
-      toast.color = 'danger';
-      document.body.appendChild(toast);
-      toast.present().then(() => {
-        setTimeout(() => window.location.href = '/login.html', 2000);
-      });
+    async function fetchUser() {
+      try {
+        const response = await fetch('/user', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token,
+          },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch user data');
+        }
+        return { username: data.username || 'User', email: data.email || 'No email' };
+      } catch (err) {
+        return { username: 'User', email: 'No email' };
+      }
+    }
+
+    async function checkAuth() {
+      if (!token) {
+        const toast = document.createElement('ion-toast');
+        toast.message = 'Please log in to view posts';
+        toast.duration = 2000;
+        toast.color = 'danger';
+        document.body.appendChild(toast);
+        toast.present().then(() => {
+          setTimeout(() => window.location.href = '/login.html', 2000);
+        });
+        return false;
+      }
+
+      try {
+        const user = await fetchUser();
+        usernameLabel.textContent = user.username;
+        emailLabel.textContent = user.email;
+        return true;
+      } catch (err) {
+        const toast = document.createElement('ion-toast');
+        toast.message = err.message || 'Authentication failed';
+        toast.duration = 2000;
+        toast.color = 'danger';
+        document.body.appendChild(toast);
+        toast.present().then(() => {
+          localStorage.removeItem('token');
+          setTimeout(() => window.location.href = '/login.html', 2000);
+        });
+        return false;
+      }
     }
 
     signOut.addEventListener('click', () => {
@@ -116,6 +173,8 @@
     });
 
     async function loadPosts() {
+      if (!(await checkAuth())) return;
+
       try {
         const response = await fetch('/posts', {
           method: 'GET',

@@ -24,6 +24,18 @@
       margin: 0 auto;
       display: block;
     }
+    .user-profile-item {
+      --padding-start: 16px;
+      --inner-padding-end: 16px;
+    }
+    .user-profile-label {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .user-profile-email {
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+    }
   </style>
 </head>
 <body>
@@ -36,9 +48,12 @@
       </ion-header>
       <ion-content>
         <ion-list>
-          <ion-item href="/index.html">
-            <ion-icon  <ion-icon name="person-outline" slot="start"></ion-icon>
-            User Profile
+          <ion-item href="/index.html" class="user-profile-item" id="userProfileItem">
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+            <ion-label>
+              <div class="user-profile-label" id="usernameLabel">Loading...</div>
+              <div class="user-profile-email" id="emailLabel">Loading...</div>
+            </ion-label>
           </ion-item>
           <ion-item href="/my-account.html">
             <ion-icon name="person-circle-outline" slot="start"></ion-icon>
@@ -103,6 +118,8 @@
   <script>
     const token = localStorage.getItem('token');
     const signOut = document.getElementById('signOut');
+    const usernameLabel = document.getElementById('usernameLabel');
+    const emailLabel = document.getElementById('emailLabel');
 
     if (token) {
       signOut.addEventListener('click', () => {
@@ -138,6 +155,11 @@
           throw new Error(data.error || 'Failed to load user info');
         }
 
+        // Update menu
+        usernameLabel.textContent = data.username || 'User';
+        emailLabel.textContent = data.email || 'No email';
+
+        // Update user info
         const userInfo = document.getElementById('userInfo');
         userInfo.innerHTML = `
           <ion-item>

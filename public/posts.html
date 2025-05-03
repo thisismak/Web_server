@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Smart大檔</title>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
   <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.min.css"/>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      min-width: 320px;
+    }
     ion-content {
       --background: var(--ion-color-light);
     }
@@ -38,6 +44,78 @@
     ion-segment {
       --background: var(--ion-color-light);
       padding-bottom: 8px;
+    }
+    #postsContainer.grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 8px;
+      padding: 8px;
+    }
+    #postsContainer.grid-view ion-card {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .grid-image-container {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      overflow: hidden;
+    }
+    .grid-image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .grid-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 6px;
+    }
+    .grid-overlay h3 {
+      margin: 0;
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .grid-view ion-card-subtitle {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+    }
+    @media (max-width: 390px) {
+      #postsContainer.grid-view {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        padding: 4px;
+      }
+      .grid-image-container {
+        height: 120px;
+      }
+      .grid-overlay h3 {
+        font-size: 12px;
+      }
+      .grid-view ion-card-subtitle {
+        font-size: 0.7rem;
+      }
+    }
+    @media (min-width: 391px) and (max-width: 768px) {
+      #postsContainer.grid-view {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .grid-image-container {
+        height: 140px;
+      }
+    }
+    @media (min-width: 769px) {
+      #postsContainer.grid-view {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
   </style>
 </head>
@@ -93,6 +171,11 @@
             <ion-menu-button></ion-menu-button>
           </ion-buttons>
           <ion-title>Smart大檔</ion-title>
+          <ion-buttons slot="end">
+            <ion-button id="toggleViewButton">
+              <ion-icon id="viewIcon" name="grid-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
         </ion-toolbar>
         <ion-searchbar placeholder="Search Posts" id="searchBar"></ion-searchbar>
         <ion-segment id="sortBar" value="asc">
@@ -131,8 +214,11 @@
     const emailLabel = document.getElementById('emailLabel');
     const searchBar = document.getElementById('searchBar');
     const sortBar = document.getElementById('sortBar');
+    const toggleViewButton = document.getElementById('toggleViewButton');
+    const viewIcon = document.getElementById('viewIcon');
     let allPosts = [];
     let currentQuery = '';
+    let viewMode = 'list';
 
     async function fetchUser() {
       try {
@@ -203,49 +289,65 @@
         return;
       }
 
-      posts.forEach(post => {
-        const postCard = document.createElement('ion-card');
-        postCard.innerHTML = `
-          <ion-card-header>
-            <ion-card-title>${post.name}</ion-card-title>
+      if (viewMode === 'grid') {
+        postsContainer.classList.add('grid-view');
+        posts.forEach(post => {
+          const postCard = document.createElement('ion-card');
+          postCard.innerHTML = `
+            <div class="grid-image-container">
+              <img src="${post.image || '/placeholder.jpg'}" alt="${post.name}" class="post-img">
+              <div class="grid-overlay">
+                <h3>${post.name}</h3>
+              </div>
+            </div>
             <ion-card-subtitle>Posted by: ${post.username}</ion-card-subtitle>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-item>
-              <ion-label><strong>Type:</strong> ${post.type}</ion-label>
-            </ion-item>
-            <ion-item>
-              <ion-label><strong>Function:</strong> ${post.function}</ion-label>
-            </ion-item>
-            <ion-item>
-              <ion-label><strong>Features:</strong> ${post.features}</ion-label>
-            </ion-item>
-            <ion-item>
-              <ion-label><strong>Category:</strong> ${post.category}</ion-label>
-            </ion-item>
-            <ion-item>
-              <ion-label><strong>Tags:</strong> ${post.tags}</ion-label>
-            </ion-item>
-            ${post.image ? `<img src="/${post.image}" alt="Post Image" class="post-img ion-margin">` : ''}
-            ${post.file_name ? `<ion-item><ion-label><strong>File:</strong> <a href="/download/${post.id}" download="${post.file_name}" class="text-primary">${post.file_name}</a></ion-label></ion-item>` : ''}
-            ${post.impact ? `<ion-item><ion-label><strong>Impact:</strong> ${post.impact}</ion-label></ion-item>` : ''}
-          </ion-card-content>
-        `;
-        postsContainer.appendChild(postCard);
-      });
+          `;
+          postsContainer.appendChild(postCard);
+        });
+      } else {
+        postsContainer.classList.remove('grid-view');
+        posts.forEach(post => {
+          const postCard = document.createElement('ion-card');
+          postCard.innerHTML = `
+            <ion-card-header>
+              <ion-card-title>${post.name}</ion-card-title>
+              <ion-card-subtitle>Posted by: ${post.username}</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-item>
+                <ion-label><strong>Type:</strong> ${post.type}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label><strong>Function:</strong> ${post.function}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label><strong>Features:</strong> ${post.features}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label><strong>Category:</strong> ${post.category}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label><strong>Tags:</strong> ${post.tags}</ion-label>
+              </ion-item>
+              ${post.image ? `<img src="/${post.image}" alt="Post Image" class="post-img ion-margin">` : ''}
+              ${post.file_name ? `<ion-item><ion-label><strong>File:</strong> <a href="/download/${post.id}" download="${post.file_name}" class="text-primary">${post.file_name}</a></ion-label></ion-item>` : ''}
+              ${post.impact ? `<ion-item><ion-label><strong>Impact:</strong> ${post.impact}</ion-label></ion-item>` : ''}
+            </ion-card-content>
+          `;
+          postsContainer.appendChild(postCard);
+        });
+      }
     }
 
     function applyFiltersAndSort() {
       let filteredPosts = allPosts;
 
-      // Apply search filter if query exists
       if (currentQuery) {
         filteredPosts = allPosts.filter(post => 
           post.name.toLowerCase().includes(currentQuery)
         );
       }
 
-      // Apply sorting
       const sortOrder = sortBar.value;
       filteredPosts = [...filteredPosts].sort((a, b) => {
         const nameA = a.name.toLowerCase();
@@ -295,6 +397,13 @@
 
     sortBar.addEventListener('ionChange', () => {
       console.log('Sort order:', sortBar.value);
+      applyFiltersAndSort();
+    });
+
+    toggleViewButton.addEventListener('click', () => {
+      viewMode = viewMode === 'list' ? 'grid' : 'list';
+      viewIcon.name = viewMode === 'list' ? 'grid-outline' : 'list-outline';
+      console.log('View mode:', viewMode);
       applyFiltersAndSort();
     });
   </script>

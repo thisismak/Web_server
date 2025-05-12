@@ -6,7 +6,7 @@ package-lock.json
 *.sqlite3-shm
 *.sqlite3-wal
 # 自動生成的資料庫相關文件
-# migrations/
+migrations/
 db.ts
 knex.ts
 knexfile.ts

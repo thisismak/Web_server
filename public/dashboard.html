@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .dashboard-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+      text-align: center;
+    }
+    .dashboard-container h2 {
+      margin-bottom: 20px;
+    }
+    .dashboard-container p {
+      margin: 10px 0;
+    }
+    .dashboard-container input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .dashboard-container button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .dashboard-container .update-button {
+      background-color: #28a745;
+      color: white;
+    }
+    .dashboard-container .update-button:hover {
+      background-color: #218838;
+    }
+    .dashboard-container .logout-button {
+      background-color: #dc3545;
+      color: white;
+    }
+    .dashboard-container .logout-button:hover {
+      background-color: #c82333;
+    }
+    .dashboard-container .error, .dashboard-container .success {
+      margin-top: 10px;
+    }
+    .dashboard-container .error {
+      color: red;
+    }
+    .dashboard-container .success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h2>Dashboard</h2>
+    <p id="username">Loading...</p>
+    <p id="email"></p>
+    <input type="email" id="new-email" placeholder="Update email">
+    <button class="update-button" onclick="updateEmail()">Update Email</button>
+    <button class="logout-button" onclick="logout()">Logout</button>
+    <p id="message" class="error"></p>
+  </div>
+
+  <script>
+    async function loadUserData() {
+      const token = localStorage.getItem('token');
+      const messageEl = document.getElementById('message');
+      const usernameEl = document.getElementById('username');
+      const emailEl = document.getElementById('email');
+
+      messageEl.textContent = '';
+      messageEl.className = 'error';
+
+      if (!token) {
+        messageEl.textContent = 'No token found. Please login.';
+        setTimeout(() => { window.location.href = '/login.html'; }, 2000);
+        return;
+      }
+
+      try {
+        const response = await fetch('/user', {
+          method: 'GET',
+          headers: { 'Authorization': token }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          messageEl.textContent = data.error || 'Failed to load user data';
+          setTimeout(() => { window.location.href = '/login.html'; }, 2000);
+          return;
+        }
+
+        usernameEl.textContent = `Username: ${data.username}`;
+        emailEl.textContent = data.email ? `Email: ${data.email}` : 'Email: Not set';
+      } catch (err) {
+        messageEl.textContent = 'Server error';
+        console.error('Fetch user error:', err);
+        setTimeout(() => { window.location.href = '/login.html'; }, 2000);
+      }
+    }
+
+    async function updateEmail() {
+      const token = localStorage.getItem('token');
+      const newEmail = document.getElementById('new-email').value;
+      const messageEl = document.getElementById('message');
+
+      messageEl.textContent = '';
+      messageEl.className = 'error';
+
+      if (!token) {
+        messageEl.textContent = 'No token found. Please login.';
+        setTimeout(() => { window.location.href = '/login.html'; }, 2000);
+        return;
+      }
+
+      if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        messageEl.textContent = 'Invalid email format';
+        return;
+      }
+
+      try {
+        const response = await fetch('/user/email', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          },
+          body: JSON.stringify({ email: newEmail || null })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          messageEl.textContent = data.error || 'Failed to update email';
+          return;
+        }
+
+        messageEl.className = 'success';
+        messageEl.textContent = 'Email updated successfully';
+        await loadUserData(); // Refresh displayed user data
+        document.getElementById('new-email').value = ''; // Clear input
+      } catch (err) {
+        messageEl.textContent = 'Server error';
+        console.error('Update email error:', err);
+      }
+    }
+
+    async function logout() {
+      const token = localStorage.getItem('token');
+      localStorage.removeItem('token');
+
+      try {
+        await fetch(`/logout?token=${token}`);
+      } catch (err) {
+        console.error('Logout error:', err);
+      }
+
+      window.location.href = '/login.html';
+    }
+
+    window.onload = loadUserData;
+  </script>
+</body>
+</html>

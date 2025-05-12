@@ -36,12 +36,17 @@ server.use(express.static('public'));
 server.use(express.urlencoded({ extended: true }));
 server.use(express.json({ limit: '10mb' }));
 
+// Root route to redirect to login
+server.get('/', (req: Request, res: Response) => {
+  res.redirect('/login.html');
+});
+
 // Authentication middleware
 const authenticate: RequestHandler = (req: Request, res: Response, next: Function) => {
   const token = req.headers.authorization || (req.query.token as string) || '';
   db.get('SELECT user_id FROM session WHERE token = ?', [token], (err, session: Session | undefined) => {
     if (err) {
-      console.error('Database error:', err.message);
+      console.error('Database error in authenticate:', err.message, err.stack);
       res.status(500).json({ error: 'Server error' });
       return;
     }
@@ -80,7 +85,7 @@ const registerHandler: RequestHandler = async (req: Request, res: Response): Pro
   // Check for duplicate username
   db.get('SELECT id FROM user WHERE username = ?', [username], async (err, row: User | undefined) => {
     if (err) {
-      console.error('Database error:', err.message);
+      console.error('Database error in register:', err.message, err.stack);
       res.status(500).json({ error: 'Server error' });
       return;
     }
@@ -99,7 +104,7 @@ const registerHandler: RequestHandler = async (req: Request, res: Response): Pro
         [username, hashedPassword, email || null],
         function (err) {
           if (err) {
-            console.error('Insert user error:', err.message);
+            console.error('Insert user error:', err.message, err.stack);
             res.status(500).json({ error: 'Server error' });
             return;
           }
@@ -134,7 +139,7 @@ const loginHandler: RequestHandler = (req: Request, res: Response): void => {
   // Check credentials
   db.get('SELECT id, username, password FROM user WHERE username = ?', [username], async (err, user: User | undefined) => {
     if (err) {
-      console.error('Database error:', err.message);
+      console.error('Database error in login:', err.message, err.stack);
       res.status(500).json({ error: 'Server error' });
       return;
     }
@@ -155,10 +160,11 @@ const loginHandler: RequestHandler = (req: Request, res: Response): void => {
       const token = randomUUID();
       db.run('INSERT INTO session (token, user_id) VALUES (?, ?)', [token, user.id], (err) => {
         if (err) {
-          console.error('Insert session error:', err.message);
+          console.error('Insert session error:', err.message, err.stack);
           res.status(500).json({ error: 'Server error' });
           return;
         }
+        console.log('Login successful:', { user_id: user.id, token });
         res.status(200).json({ token });
       });
     } catch (hashErr) {
@@ -175,13 +181,70 @@ const logoutHandler: RequestHandler = (req: Request, res: Response): void => {
   const token = req.query.token as string;
   db.run('DELETE FROM session WHERE token = ?', [token], (err) => {
     if (err) {
-      console.error('Delete session error:', err.message);
+      console.error('Delete session error:', err.message, err.stack);
     }
     res.redirect('/');
   });
 };
 
 server.get('/logout', logoutHandler);
+
+// Get user info
+const userHandler: RequestHandler = (req: Request, res: Response): void => {
+  const user_id = (req as any).user_id;
+  db.get('SELECT username, email FROM user WHERE id = ?', [user_id], (err, user: User | undefined) => {
+    if (err) {
+      console.error('Database error in user:', err.message, err.stack);
+      res.status(500).json({ error: 'Server error' });
+      return;
+    }
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    res.status(200).json({ username: user.username, email: user.email });
+  });
+};
+
+server.get('/user', authenticate, userHandler);
+
+// Update user email
+const updateEmailHandler: RequestHandler = (req: Request, res: Response): void => {
+  const user_id = (req as any).user_id;
+  const { email } = req.body;
+
+  // Validate email
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    res.status(400).json({ error: 'Invalid email format' });
+    return;
+  }
+
+  // Check for duplicate email
+  db.get('SELECT id FROM user WHERE email = ? AND id != ?', [email, user_id], (err, row: User | undefined) => {
+    if (err) {
+      console.error('Database error in email check:', err.message, err.stack);
+      res.status(500).json({ error: 'Server error' });
+      return;
+    }
+    if (row) {
+      res.status(409).json({ error: 'Email already in use' });
+      return;
+    }
+
+    // Update email
+    db.run('UPDATE user SET email = ? WHERE id = ?', [email || null, user_id], function (err) {
+      if (err) {
+        console.error('Update email error:', err.message, err.stack);
+        res.status(500).json({ error: 'Server error' });
+        return;
+      }
+      console.log('Email updated:', { user_id, email: email || null, rowsAffected: this.changes });
+      res.status(200).json({ message: 'Email updated successfully' });
+    });
+  });
+};
+
+server.patch('/user/email', authenticate, updateEmailHandler);
 
 // Start server
 server.listen(8100, () => {

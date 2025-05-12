@@ -101,7 +101,7 @@
 
         localStorage.setItem('token', data.token);
         alert('Login successful!');
-        window.location.href = '/'; // Redirect to homepage or dashboard
+        window.location.href = '/dashboard.html';
       } catch (err) {
         errorEl.textContent = 'Server error';
         console.error('Login error:', err);
